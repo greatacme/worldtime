@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Time</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+:root {
+  --page:    #eef3f9;
+  --hdr:     #ffffff;
+  --card:    #ffffff;
+  --lpanel:  #f4f8fc;
+  --text:    #18303f;
+  --dim:     #5a7a90;
+  --border:  rgba(30,80,130,.12);
+  --shadow:  0 2px 14px rgba(30,80,130,.09);
+  --accent:  #1260a0;
+  --acc2:    #1580cc;
+  --orange:  #d05808;
+  --orng-gl: rgba(208,88,8,.7);
+
+  /* ── TAPE COLOURS (pastel day / night) ── */
+  --c-day:   #c2e2f8;   /* pastel sky blue  */
+  --c-night: #3a5878;   /* muted slate navy */
+  --c-day-t: #1a3a58;   /* label on day     */
+  --c-nit-t: #b0cfe8;   /* label on night   */
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--page);color:var(--text);
+  font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+
+/* ── HEADER ── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 22px;background:var(--hdr);
+  box-shadow:0 1px 0 var(--border),0 2px 10px rgba(30,80,130,.07);
+  position:sticky;top:0;z-index:100;
+}
+.logo{font-size:17px;font-weight:700}
+.logo em{color:var(--acc2);font-style:normal}
+.btn-now{
+  background:var(--accent);color:#fff;border:none;
+  padding:6px 15px;border-radius:20px;cursor:pointer;
+  font-size:12px;font-weight:700;transition:background .2s;
+}
+.btn-now:hover{background:var(--acc2)}
+
+/* ── CITY SECTION ── */
+.csec{padding:10px 18px 4px}
+
+/* drag handle */
+.dhandle{
+  flex-shrink:0;width:22px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:grab;color:var(--dim);font-size:13px;letter-spacing:1px;
+  background:var(--lpanel);border-right:1px solid var(--border);
+  opacity:.45;transition:opacity .15s;user-select:none;
+}
+.dhandle:hover{opacity:.9}
+.dhandle:active{cursor:grabbing}
+
+/* drag states */
+.card.dragging{opacity:.35;box-shadow:none}
+.card.drag-over-top{border-top:2px solid var(--accent)}
+.card.drag-over-bot{border-bottom:2px solid var(--accent)}
+
+.card{
+  display:flex;align-items:stretch;
+  margin-bottom:7px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;box-shadow:var(--shadow);
+  overflow:hidden;min-height:72px;
+}
+
+/* left info */
+.cleft{
+  flex-shrink:0;width:168px;
+  display:flex;flex-direction:column;justify-content:center;gap:3px;
+  padding:9px 11px 9px 13px;
+  background:var(--lpanel);border-right:1px solid var(--border);
+}
+.cr1{display:flex;align-items:center;gap:5px}
+.cflag{font-size:17px;line-height:1}
+.cnames{flex:1;min-width:0}
+.cname{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccountry{font-size:10px;color:var(--dim)}
+.brm{
+  width:20px;height:20px;flex-shrink:0;
+  background:transparent;border:1px solid rgba(208,88,8,.35);
+  color:var(--orange);border-radius:50%;cursor:pointer;
+  font-size:15px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.brm:hover{background:rgba(208,88,8,.12)}
+.cr2{display:flex;align-items:baseline;gap:4px}
+.chm{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.cs{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+.cr3{font-size:10px;color:var(--dim)}
+
+/* ── TAPE RIGHT PANEL ── */
+.cright{
+  flex:1;position:relative;overflow:hidden;
+  cursor:ew-resize;user-select:none;
+  background:var(--c-night);
+}
+
+/* ── CENTRE MARK — fixed at 50%, always ── */
+.cmark{
+  position:absolute;left:50%;top:0;bottom:0;
+  transform:translateX(-50%);
+  width:3px;
+  pointer-events:none;z-index:20;
+  background:var(--orange);
+  box-shadow:0 0 10px var(--orng-gl),0 0 3px rgba(255,255,255,.4);
+}
+/* top/bottom triangles */
+.cmark::before,.cmark::after{
+  content:'';position:absolute;left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+}
+.cmark::before{
+  top:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;
+  border-top:9px solid var(--orange);
+}
+.cmark::after{
+  bottom:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;
+  border-bottom:9px solid var(--orange);
+}
+
+/* ── TAPE STRIP ── */
+.tape{
+  position:absolute;top:0;bottom:0;left:0;
+  display:flex;align-items:stretch;
+  will-change:transform;
+}
+/* real-time smooth drift */
+.tape.drift { transition:transform 1.2s linear }
+/* slider/drag: quick snap */
+.tape.quick { transition:transform .25s ease }
+/* initial placement: no transition */
+.tape.instant { transition:none }
+
+/* ── HOUR CELL ── */
+.tc{
+  flex-shrink:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;
+  padding-top:5px;
+  border-right:1px solid rgba(255,255,255,.08);
+  position:relative;
+}
+/* period colours: day / night only */
+.tc.day  { background:var(--c-day)   }
+.tc.night{ background:var(--c-night) }
+
+/* midnight cell: brighter left border */
+.tc.mid { border-left:2px solid rgba(255,255,255,.35) }
+
+/* hour label */
+.tlbl{
+  font-size:10px;font-weight:600;
+  line-height:1;white-space:nowrap;
+  pointer-events:none;
+  margin-bottom:auto;
+}
+.tc.day   .tlbl{ color:var(--c-day-t) }
+.tc.night .tlbl{ color:var(--c-nit-t) }
+
+/* tick at bottom */
+.ttick{
+  position:absolute;bottom:3px;
+  width:1px;
+  flex-shrink:0;
+}
+.tc.day   .ttick{ background:rgba(30,80,120,.25) }
+.tc.night .ttick{ background:rgba(180,215,240,.25) }
+.tc.maj .ttick  { opacity:.7 }
+.tc.mid         { border-left:2px solid rgba(255,255,255,.5) }
+.tc.mid .ttick  { opacity:1 }
+
+/* ── ADD ROW ── */
+.addrow{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 0 5px;
+}
+.badd{
+  width:27px;height:27px;flex-shrink:0;
+  background:#fff;border:2px solid var(--accent);
+  color:var(--accent);border-radius:50%;cursor:pointer;
+  font-size:20px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 5px rgba(30,80,130,.14);
+  transition:all .15s;
+}
+.badd:hover{background:var(--accent);color:#fff}
+.addlbl{font-size:12px;color:var(--dim);cursor:pointer}
+.addlbl:hover{color:var(--accent)}
+
+/* ── SLIDER ── */
+.sldsec{
+  padding:8px 18px 11px;
+  background:#fff;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 -1px 6px rgba(30,80,130,.05);
+}
+.srow{display:flex;align-items:center;gap:10px}
+.slbl{font-size:10px;color:var(--dim);white-space:nowrap}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:5px;border-radius:3px;
+  background:rgba(30,80,130,.15);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:var(--orange);
+  box-shadow:0 0 0 3px rgba(208,88,8,.18);
+  cursor:pointer;transition:box-shadow .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(208,88,8,.28)}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--orange);border:none;cursor:pointer;
+}
+
+/* ── MAP ── */
+.mapsec{padding:9px 0 14px;display:flex;flex-direction:column;margin:0 -22px;width:calc(100% + 44px)}
+.maptitle{font-size:10px;color:var(--dim);letter-spacing:.5px;margin-bottom:5px;font-weight:600;padding:0 18px}
+.mapwrap{
+  position:relative;
+  height:max(380px,45vh);
+  border-left:none;border-right:none;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  border-radius:0;
+  overflow:hidden;background:#b8d4ea;
+  box-shadow:var(--shadow);
+}
+#mapCanvas{display:block;width:100%;height:100%}
+#mapMarkers{position:absolute;inset:0;pointer-events:none}
+.mm{position:absolute;transform:translate(-50%,-50%);pointer-events:all;cursor:pointer;z-index:3}
+.mdot{
+  width:10px;height:10px;
+  background:var(--orange);border:2px solid #fff;border-radius:50%;
+  box-shadow:0 0 6px var(--orng-gl),0 2px 5px rgba(0,0,0,.18);
+  transition:transform .15s;
+}
+.mm:hover .mdot{transform:scale(1.5)}
+.mtip{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.96);border:1px solid var(--border);
+  border-radius:4px;padding:2px 7px;
+  font-size:10px;white-space:nowrap;color:var(--text);
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+  opacity:0;transition:opacity .18s;pointer-events:none;
+}
+.mm:hover .mtip{opacity:1}
+.mlbl{
+  position:absolute;top:12px;left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.82);
+  border:1px solid rgba(30,80,130,.18);
+  border-radius:3px;
+  padding:1px 5px;
+  font-size:10px;font-weight:600;
+  color:#1a3050;white-space:nowrap;
+  pointer-events:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.12);
+}
+
+/* ── BEZEL WORLD TIMER ── */
+.bzsec{padding:9px 18px 22px;display:flex;flex-direction:column;align-items:center}
+.bztitle{font-size:10px;color:var(--dim);letter-spacing:.5px;margin-bottom:8px;font-weight:600;align-self:flex-start}
+.bzwrap{width:min(100%,520px)}
+#bzSVG{width:100%;height:auto;display:block;cursor:grab;user-select:none;touch-action:none}
+#bzSVG:active{cursor:grabbing}
+#bzBezel{transition:transform .8s linear}
+#bzBezel.nodrift{transition:none}
+
+/* ── SEARCH ── */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(15,40,65,.45);backdrop-filter:blur(4px);
+  z-index:300;display:flex;align-items:flex-start;justify-content:center;
+  padding-top:65px;
+}
+.overlay.hidden{display:none}
+.sbox{
+  background:#fff;border:1px solid var(--border);
+  border-radius:12px;width:400px;max-height:460px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 60px rgba(15,40,65,.2);
+}
+.shdr{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 15px;border-bottom:1px solid var(--border);
+}
+.sinp{
+  background:transparent;border:none;color:var(--text);
+  font-size:14px;outline:none;flex:1;
+}
+.sinp::placeholder{color:var(--dim)}
+.scls{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer}
+.scls:hover{color:var(--text)}
+.sres{overflow-y:auto;flex:1}
+.sempty{padding:20px;text-align:center;color:var(--dim);font-size:12px}
+.sitem{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 15px;cursor:pointer;
+  border-bottom:1px solid rgba(30,80,130,.06);transition:background .1s;
+}
+.sitem:hover{background:#f0f6ff}
+.sflag{font-size:19px}
+.sinf{flex:1}
+.sname{font-size:13px;font-weight:600}
+.scountry{font-size:10px;color:var(--dim)}
+.stime{font-size:14px;font-weight:700;color:var(--acc2)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">🌍 <em>World</em> Time</div>
+  <button class="btn-now" onclick="resetToNow()">현재 시각</button>
+</div>
+
+<div class="csec">
+  <div id="cityList"></div>
+  <div class="addrow">
+    <button class="badd" onclick="openSearch()" title="도시 추가">+</button>
+    <span class="addlbl" onclick="openSearch()">도시 추가</span>
+  </div>
+</div>
+
+<div class="sldsec">
+  <div class="srow">
+    <span class="slbl">−24h</span>
+    <input type="range" id="slider" min="-1440" max="1440" step="1" value="0"
+           oninput="onSlider(this.value)">
+    <span class="slbl">+24h</span>
+  </div>
+</div>
+
+<div class="mapsec">
+  <div class="maptitle">WORLD MAP</div>
+  <div class="mapwrap">
+    <canvas id="mapCanvas"></canvas>
+    <div id="mapMarkers"></div>
+  </div>
+</div>
+
+<div class="bzsec">
+  <div class="bztitle">WORLD TIMER BEZEL</div>
+  <div class="bzwrap">
+    <svg id="bzSVG" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overlay" onclick="bgClick(event)">
+  <div class="sbox">
+    <div class="shdr">
+      <span style="color:var(--dim)">🔍</span>
+      <input class="sinp" id="sinp" type="text"
+        placeholder="도시 검색 (한국어 / English)..."
+        oninput="renderSearch()" autocomplete="off">
+      <button class="scls" onclick="closeSearch()">✕</button>
+    </div>
+    <div class="sres" id="sres"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   CITY DATABASE
+══════════════════════════════════ */
+const DB=[
+  {id:'seoul',        name:'서울',            en:'Seoul',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:37.57, lon:126.98},
+  {id:'busan',        name:'부산',            en:'Busan',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:35.18, lon:129.08},
+  {id:'tokyo',        name:'도쿄',            en:'Tokyo',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:35.68, lon:139.69},
+  {id:'osaka',        name:'오사카',          en:'Osaka',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:34.69, lon:135.50},
+  {id:'beijing',      name:'베이징',          en:'Beijing',         country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:39.91, lon:116.39},
+  {id:'shanghai',     name:'상하이',          en:'Shanghai',        country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:31.23, lon:121.47},
+  {id:'hongkong',     name:'홍콩',            en:'Hong Kong',       country:'홍콩',          flag:'🇭🇰',tz:'Asia/Hong_Kong',         lat:22.32, lon:114.17},
+  {id:'taipei',       name:'타이베이',        en:'Taipei',          country:'대만',          flag:'🇹🇼',tz:'Asia/Taipei',            lat:25.03, lon:121.56},
+  {id:'singapore',    name:'싱가포르',        en:'Singapore',       country:'싱가포르',      flag:'🇸🇬',tz:'Asia/Singapore',         lat:1.35,  lon:103.82},
+  {id:'bangkok',      name:'방콕',            en:'Bangkok',         country:'태국',          flag:'🇹🇭',tz:'Asia/Bangkok',           lat:13.75, lon:100.51},
+  {id:'manila',       name:'마닐라',          en:'Manila',          country:'필리핀',        flag:'🇵🇭',tz:'Asia/Manila',            lat:14.60, lon:120.98},
+  {id:'jakarta',      name:'자카르타',        en:'Jakarta',         country:'인도네시아',    flag:'🇮🇩',tz:'Asia/Jakarta',           lat:-6.21, lon:106.85},
+  {id:'kualalumpur',  name:'쿠알라룸푸르',    en:'Kuala Lumpur',    country:'말레이시아',    flag:'🇲🇾',tz:'Asia/Kuala_Lumpur',      lat:3.14,  lon:101.69},
+  {id:'hanoi',        name:'하노이',          en:'Hanoi',           country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:21.03, lon:105.85},
+  {id:'hochiminh',    name:'호치민',          en:'Ho Chi Minh',     country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:10.82, lon:106.63},
+  {id:'dhaka',        name:'다카',            en:'Dhaka',           country:'방글라데시',    flag:'🇧🇩',tz:'Asia/Dhaka',             lat:23.81, lon:90.41},
+  {id:'mumbai',       name:'뭄바이',          en:'Mumbai',          country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:19.08, lon:72.88},
+  {id:'delhi',        name:'뉴델리',          en:'New Delhi',       country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:28.61, lon:77.21},
+  {id:'karachi',      name:'카라치',          en:'Karachi',         country:'파키스탄',      flag:'🇵🇰',tz:'Asia/Karachi',           lat:24.86, lon:67.01},
+  {id:'dubai',        name:'두바이',          en:'Dubai',           country:'UAE',           flag:'🇦🇪',tz:'Asia/Dubai',             lat:25.20, lon:55.27},
+  {id:'riyadh',       name:'리야드',          en:'Riyadh',          country:'사우디아라비아',flag:'🇸🇦',tz:'Asia/Riyadh',            lat:24.69, lon:46.72},
+  {id:'tehran',       name:'테헤란',          en:'Tehran',          country:'이란',          flag:'🇮🇷',tz:'Asia/Tehran',            lat:35.69, lon:51.39},
+  {id:'tel_aviv',     name:'텔아비브',        en:'Tel Aviv',        country:'이스라엘',      flag:'🇮🇱',tz:'Asia/Jerusalem',         lat:32.07, lon:34.79},
+  {id:'istanbul',     name:'이스탄불',        en:'Istanbul',        country:'터키',          flag:'🇹🇷',tz:'Europe/Istanbul',        lat:41.01, lon:28.96},
+  {id:'tashkent',     name:'타슈켄트',        en:'Tashkent',        country:'우즈베키스탄',  flag:'🇺🇿',tz:'Asia/Tashkent',          lat:41.30, lon:69.24},
+  {id:'almaty',       name:'알마티',          en:'Almaty',          country:'카자흐스탄',    flag:'🇰🇿',tz:'Asia/Almaty',            lat:43.26, lon:76.95},
+  {id:'ulaanbaatar',  name:'울란바토르',      en:'Ulaanbaatar',     country:'몽골',          flag:'🇲🇳',tz:'Asia/Ulaanbaatar',       lat:47.92, lon:106.92},
+  {id:'sydney',       name:'시드니',          en:'Sydney',          country:'호주',          flag:'🇦🇺',tz:'Australia/Sydney',       lat:-33.87,lon:151.21},
+  {id:'melbourne',    name:'멜버른',          en:'Melbourne',       country:'호주',          flag:'🇦🇺',tz:'Australia/Melbourne',    lat:-37.81,lon:144.96},
+  {id:'auckland',     name:'오클랜드',        en:'Auckland',        country:'뉴질랜드',      flag:'🇳🇿',tz:'Pacific/Auckland',       lat:-36.85,lon:174.76},
+  {id:'london',       name:'런던',            en:'London',          country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:51.51, lon:-0.13},
+  {id:'paris',        name:'파리',            en:'Paris',           country:'프랑스',        flag:'🇫🇷',tz:'Europe/Paris',           lat:48.85, lon:2.35},
+  {id:'berlin',       name:'베를린',          en:'Berlin',          country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:52.52, lon:13.41},
+  {id:'madrid',       name:'마드리드',        en:'Madrid',          country:'스페인',        flag:'🇪🇸',tz:'Europe/Madrid',          lat:40.42, lon:-3.70},
+  {id:'rome',         name:'로마',            en:'Rome',            country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:41.90, lon:12.50},
+  {id:'amsterdam',    name:'암스테르담',      en:'Amsterdam',       country:'네덜란드',      flag:'🇳🇱',tz:'Europe/Amsterdam',       lat:52.37, lon:4.90},
+  {id:'zurich',       name:'취리히',          en:'Zurich',          country:'스위스',        flag:'🇨🇭',tz:'Europe/Zurich',          lat:47.37, lon:8.54},
+  {id:'vienna',       name:'빈',              en:'Vienna',          country:'오스트리아',    flag:'🇦🇹',tz:'Europe/Vienna',          lat:48.21, lon:16.37},
+  {id:'warsaw',       name:'바르샤바',        en:'Warsaw',          country:'폴란드',        flag:'🇵🇱',tz:'Europe/Warsaw',          lat:52.23, lon:21.01},
+  {id:'athens',       name:'아테네',          en:'Athens',          country:'그리스',        flag:'🇬🇷',tz:'Europe/Athens',          lat:37.98, lon:23.73},
+  {id:'stockholm',    name:'스톡홀름',        en:'Stockholm',       country:'스웨덴',        flag:'🇸🇪',tz:'Europe/Stockholm',       lat:59.33, lon:18.07},
+  {id:'helsinki',     name:'헬싱키',          en:'Helsinki',        country:'핀란드',        flag:'🇫🇮',tz:'Europe/Helsinki',        lat:60.17, lon:24.94},
+  {id:'moscow',       name:'모스크바',        en:'Moscow',          country:'러시아',        flag:'🇷🇺',tz:'Europe/Moscow',          lat:55.75, lon:37.62},
+  {id:'kyiv',         name:'키이우',          en:'Kyiv',            country:'우크라이나',    flag:'🇺🇦',tz:'Europe/Kiev',            lat:50.45, lon:30.52},
+  {id:'lisbon',       name:'리스본',          en:'Lisbon',          country:'포르투갈',      flag:'🇵🇹',tz:'Europe/Lisbon',          lat:38.72, lon:-9.14},
+  {id:'dublin',       name:'더블린',          en:'Dublin',          country:'아일랜드',      flag:'🇮🇪',tz:'Europe/Dublin',          lat:53.33, lon:-6.25},
+  {id:'newyork',      name:'뉴욕',            en:'New York',        country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:40.71, lon:-74.01},
+  {id:'losangeles',   name:'로스앤젤레스',    en:'Los Angeles',     country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:34.05, lon:-118.24},
+  {id:'chicago',      name:'시카고',          en:'Chicago',         country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:41.88, lon:-87.63},
+  {id:'miami',        name:'마이애미',        en:'Miami',           country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:25.78, lon:-80.21},
+  {id:'seattle',      name:'시애틀',          en:'Seattle',         country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:47.61, lon:-122.33},
+  {id:'sanfran',      name:'샌프란시스코',    en:'San Francisco',   country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:37.77, lon:-122.42},
+  {id:'denver',       name:'덴버',            en:'Denver',          country:'미국',          flag:'🇺🇸',tz:'America/Denver',         lat:39.74, lon:-104.98},
+  {id:'toronto',      name:'토론토',          en:'Toronto',         country:'캐나다',        flag:'🇨🇦',tz:'America/Toronto',        lat:43.65, lon:-79.38},
+  {id:'vancouver',    name:'밴쿠버',          en:'Vancouver',       country:'캐나다',        flag:'🇨🇦',tz:'America/Vancouver',      lat:49.28, lon:-123.12},
+  {id:'mexico',       name:'멕시코시티',      en:'Mexico City',     country:'멕시코',        flag:'🇲🇽',tz:'America/Mexico_City',    lat:19.43, lon:-99.13},
+  {id:'bogota',       name:'보고타',          en:'Bogotá',          country:'콜롬비아',      flag:'🇨🇴',tz:'America/Bogota',         lat:4.71,  lon:-74.07},
+  {id:'lima',         name:'리마',            en:'Lima',            country:'페루',          flag:'🇵🇪',tz:'America/Lima',           lat:-12.05,lon:-77.05},
+  {id:'saopaulo',     name:'상파울루',        en:'São Paulo',       country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-23.55,lon:-46.63},
+  {id:'buenosaires',  name:'부에노스아이레스',en:'Buenos Aires',    country:'아르헨티나',    flag:'🇦🇷',tz:'America/Argentina/Buenos_Aires',lat:-34.60,lon:-58.38},
+  {id:'alaska',       name:'앵커리지',        en:'Anchorage',       country:'미국(알래스카)',flag:'🇺🇸',tz:'America/Anchorage',      lat:61.22, lon:-149.90},
+  {id:'hawaii',       name:'호놀룰루',        en:'Honolulu',        country:'하와이',        flag:'🌺', tz:'Pacific/Honolulu',        lat:21.31, lon:-157.86},
+  {id:'cairo',        name:'카이로',          en:'Cairo',           country:'이집트',        flag:'🇪🇬',tz:'Africa/Cairo',           lat:30.04, lon:31.24},
+  {id:'lagos',        name:'라고스',          en:'Lagos',           country:'나이지리아',    flag:'🇳🇬',tz:'Africa/Lagos',           lat:6.46,  lon:3.38},
+  {id:'nairobi',      name:'나이로비',        en:'Nairobi',         country:'케냐',          flag:'🇰🇪',tz:'Africa/Nairobi',         lat:-1.29, lon:36.82},
+  {id:'johannesburg', name:'요하네스버그',    en:'Johannesburg',    country:'남아프리카',    flag:'🇿🇦',tz:'Africa/Johannesburg',    lat:-26.20,lon:28.04},
+  {id:'casablanca',   name:'카사블랑카',      en:'Casablanca',      country:'모로코',        flag:'🇲🇦',tz:'Africa/Casablanca',      lat:33.59, lon:-7.62},
+  {id:'utc',          name:'UTC',             en:'UTC',             country:'세계표준시',    flag:'🌐', tz:'UTC',                     lat:51.48, lon:0.00},
+];
+
+/* ══════════════════════════════════
+   CONFIG
+══════════════════════════════════ */
+const HOUR_W     = 46;   // px per hour — wide enough for 2-digit label
+const STRIP_LEAD = 48;   // hours of history pre-built
+const STRIP_TOT  = 120;  // total hours (= 5 days)
+
+let cities    = ['seoul','utc'];
+let offsetMin = 0;
+let refTs     = 0;      // anchor timestamp (rounded to hour, minus STRIP_LEAD)
+let drag      = null;
+let ticker    = null;
+
+/* ══════════════════════════════════
+   TIME HELPERS
+══════════════════════════════════ */
+function selTime(){ return Date.now() + offsetMin*60000; }
+
+function localHourAt(ts, tz){
+  return parseInt(
+    new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',hour12:false}).format(new Date(ts)),
+    10) % 24;
+}
+
+function getParts(tz){
+  const now = new Date(selTime());
+  const fmt = new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',
+    timeZoneName:'short'
+  });
+  const p={};
+  fmt.formatToParts(now).forEach(x=>p[x.type]=x.value);
+  let h=parseInt(p.hour,10);if(h===24)h=0;
+  const m=parseInt(p.minute,10),s=parseInt(p.second,10);
+  const wd=new Intl.DateTimeFormat('ko-KR',{timeZone:tz,weekday:'short'}).format(now).replace('요일','');
+  const tzAbbr=fmt.formatToParts(now).find(x=>x.type==='timeZoneName')?.value||'';
+  return{
+    h,m,s,
+    timeStr:`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
+    secStr:String(s).padStart(2,'0'),
+    dateStr:`${p.month}-${p.day}(${wd})`,
+    tzAbbr
+  };
+}
+
+/* colour period: day (06–17) / night (18–05) */
+function period(h){ return (h>=6 && h<18) ? 'day' : 'night'; }
+
+/* ══════════════════════════════════
+   STRIP BUILDER
+   120 cells, one per hour.
+   Labels on EVERY cell (user request).
+   refTs anchor means all cities use
+   the SAME translateX formula.
+══════════════════════════════════ */
+function initRefTs(){
+  refTs = Math.floor(Date.now()/3600000)*3600000 - STRIP_LEAD*3600000;
+}
+
+function buildStrip(city){
+  const W=HOUR_W;
+  let html='';
+  for(let i=0;i<STRIP_TOT;i++){
+    const ts=refTs+i*3600000;
+    const h=localHourAt(ts,city.tz);
+    const per=period(h);
+    const isMaj=(h%6===0);
+    const isMid=(h===0);
+    const tickH=isMid?12:isMaj?9:5;
+    const cls=`tc ${per}${isMaj?' maj':''}${isMid?' mid':''}`;
+    html+=`<div class="${cls}" style="width:${W}px">
+      <span class="tlbl">${String(h).padStart(2,'0')}</span>
+      <div class="ttick" style="height:${tickH}px"></div>
+    </div>`;
+  }
+  return html;
+}
+
+/* ══════════════════════════════════
+   translateX — SAME for every city:
+   centre of tape = selTime()
+══════════════════════════════════ */
+function calcTX(containerW){
+  const hoursSinceRef = (selTime()-refTs)/3600000;
+  return containerW/2 - hoursSinceRef*HOUR_W;
+}
+
+function applyTX(mode){
+  // mode: 'instant' | 'quick' | 'drift'
+  document.querySelectorAll('.tape').forEach(tape=>{
+    const cright=tape.parentElement;
+    if(!cright)return;
+    const tx=calcTX(cright.offsetWidth);
+    tape.classList.remove('instant','quick','drift');
+    tape.classList.add(mode);
+    tape.style.transform=`translateX(${tx.toFixed(2)}px)`;
+  });
+}
+
+/* ══════════════════════════════════
+   RENDER LIST
+══════════════════════════════════ */
+function buildCard(id){
+  const city=DB.find(c=>c.id===id);
+  if(!city)return'';
+  const p=getParts(city.tz);
+  return`<div class="card" data-id="${id}"
+    ondragover="cardDragOver(event,'${id}')"
+    ondragleave="cardDragLeave(event)"
+    ondrop="cardDrop(event,'${id}')">
+    <div class="dhandle" draggable="true"
+         ondragstart="cardDragStart(event,'${id}')"
+         ondragend="cardDragEnd()">⠿</div>
+    <div class="cleft">
+      <div class="cr1">
+        <span class="cflag">${city.flag}</span>
+        <div class="cnames">
+          <div class="cname">${city.name}</div>
+          <div class="ccountry">${city.country}</div>
+        </div>
+        <button class="brm" onclick="removeCity('${id}')" title="삭제">−</button>
+      </div>
+      <div class="cr2">
+        <span class="chm" data-id="${id}-hm">${p.timeStr}</span>
+        <span class="cs"  data-id="${id}-s">:${p.secStr}</span>
+      </div>
+      <div class="cr3" data-id="${id}-r3">${p.dateStr} · ${p.tzAbbr}</div>
+    </div>
+    <div class="cright"
+         onmousedown="dragStart(event)"
+         ontouchstart="dragStart(event)">
+      <!-- orange centre line — fixed at 50%, never moves -->
+      <div class="cmark"></div>
+      <!-- scrolling tape strip -->
+      <div class="tape instant" id="tape-${id}">${buildStrip(city)}</div>
+    </div>
+  </div>`;
+}
+
+function renderList(){
+  const el=document.getElementById('cityList');
+  if(!cities.length){
+    el.innerHTML=`<div style="padding:20px 0;text-align:center;color:var(--dim);font-size:12px">
+      + 버튼으로 도시를 추가하세요</div>`;
+    return;
+  }
+  el.innerHTML=cities.map(buildCard).join('');
+  requestAnimationFrame(()=>{
+    applyTX('instant');
+    requestAnimationFrame(()=>{
+      // switch to drift after placement
+      document.querySelectorAll('.tape').forEach(t=>{
+        t.classList.remove('instant');t.classList.add('drift');
+      });
+    });
+  });
+}
+
+/* ══════════════════════════════════
+   TICK (1 s) — update labels + tape
+══════════════════════════════════ */
+function tick(){
+  cities.forEach(id=>{
+    const city=DB.find(c=>c.id===id);if(!city)return;
+    const p=getParts(city.tz);
+    const hm=document.querySelector(`[data-id="${id}-hm"]`);
+    const s =document.querySelector(`[data-id="${id}-s"]`);
+    const r3=document.querySelector(`[data-id="${id}-r3"]`);
+    if(hm)hm.textContent=p.timeStr;
+    if(s) s.textContent=`:${p.secStr}`;
+    if(r3)r3.textContent=`${p.dateStr} · ${p.tzAbbr}`;
+  });
+  applyTX('drift');
+  renderMap();
+  bzUpdate();
+}
+
+/* ══════════════════════════════════
+   MAP  — D3 Natural Earth projection
+══════════════════════════════════ */
+let mapProj = null;
+let mapTopo = null;
+
+async function initMap(){
+  const canvas = document.getElementById('mapCanvas');
+  const wrap   = canvas.parentElement;
+  // set canvas pixel size to match CSS size
+  canvas.width  = wrap.clientWidth  || 600;
+  canvas.height = wrap.clientHeight || 200;
+
+  try {
+    mapTopo = await d3.json(
+      'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+    );
+    drawMapCanvas();
+  } catch(e) {
+    // fallback: plain ocean background (map div already has bg colour)
+    console.warn('Map data load failed', e);
+  }
+}
+
+function drawMapCanvas(){
+  const canvas = document.getElementById('mapCanvas');
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+
+  mapProj = d3.geoNaturalEarth1()
+    .fitExtent([[2, 2], [W-2, H-2]], {type:'Sphere'});
+
+  const path = d3.geoPath().projection(mapProj).context(ctx);
+
+  // ocean
+  ctx.fillStyle = '#b8d4ea';
+  ctx.beginPath(); path({type:'Sphere'}); ctx.fill();
+
+  // land
+  const countries = topojson.feature(mapTopo, mapTopo.objects.countries);
+  ctx.fillStyle   = '#d8ebcc';
+  ctx.strokeStyle = '#a8c4a0';
+  ctx.lineWidth   = 0.4;
+  ctx.beginPath(); path(countries); ctx.fill(); ctx.stroke();
+
+  // border outline
+  ctx.strokeStyle = '#7aabce';
+  ctx.lineWidth   = 0.8;
+  ctx.beginPath(); path({type:'Sphere'}); ctx.stroke();
+
+  renderMap();
+}
+
+function ll2p(lat, lon){
+  if(!mapProj) return {x:50, y:50};
+  const canvas = document.getElementById('mapCanvas');
+  const [px, py] = mapProj([lon, lat]);
+  return {
+    x: px / canvas.width  * 100,
+    y: py / canvas.height * 100
+  };
+}
+
+function renderMap(){
+  const el=document.getElementById('mapMarkers');if(!el)return;
+  el.innerHTML=cities.map(id=>{
+    const c=DB.find(x=>x.id===id);if(!c)return'';
+    const{x,y}=ll2p(c.lat,c.lon);
+    const p=getParts(c.tz);
+    return`<div class="mm" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%">
+      <div class="mdot"></div>
+      <div class="mlbl">${c.en}</div>
+      <div class="mtip">${c.flag} ${c.name} · ${p.timeStr}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════
+   SLIDER
+══════════════════════════════════ */
+function onSlider(v){
+  offsetMin=parseInt(v,10);
+  applyTX('quick');
+  updateLabels();
+  renderMap();
+}
+function updateLabels(){
+  cities.forEach(id=>{
+    const city=DB.find(c=>c.id===id);if(!city)return;
+    const p=getParts(city.tz);
+    const hm=document.querySelector(`[data-id="${id}-hm"]`);
+    const s =document.querySelector(`[data-id="${id}-s"]`);
+    const r3=document.querySelector(`[data-id="${id}-r3"]`);
+    if(hm)hm.textContent=p.timeStr;
+    if(s) s.textContent=`:${p.secStr}`;
+    if(r3)r3.textContent=`${p.dateStr} · ${p.tzAbbr}`;
+  });
+}
+function resetToNow(){
+  offsetMin=0;
+  document.getElementById('slider').value=0;
+  applyTX('quick');
+  updateLabels();
+  renderMap();
+}
+
+/* ══════════════════════════════════
+   TAPE DRAG
+══════════════════════════════════ */
+function dragStart(e){
+  e.preventDefault();
+  drag={startX:e.touches?e.touches[0].clientX:e.clientX,
+        startOff:offsetMin,
+        w:e.currentTarget.offsetWidth};
+  document.addEventListener('mousemove',dragMove);
+  document.addEventListener('mouseup',  dragEnd);
+  document.addEventListener('touchmove',dragMove,{passive:false});
+  document.addEventListener('touchend', dragEnd);
+}
+function dragMove(e){
+  if(!drag)return;e.preventDefault();
+  const x=e.touches?e.touches[0].clientX:e.clientX;
+  // drag left = move forward in time (tape moves left = future comes to centre)
+  const dMin=-Math.round((x-drag.startX)/drag.w*24*60);
+  offsetMin=Math.max(-1440,Math.min(1440,drag.startOff+dMin));
+  document.getElementById('slider').value=offsetMin;
+  applyTX('instant');
+  updateLabels();
+}
+function dragEnd(){
+  if(!drag)return;drag=null;
+  document.querySelectorAll('.tape').forEach(t=>{t.classList.remove('instant');t.classList.add('drift');});
+  document.removeEventListener('mousemove',dragMove);
+  document.removeEventListener('mouseup',  dragEnd);
+  document.removeEventListener('touchmove',dragMove);
+  document.removeEventListener('touchend', dragEnd);
+  renderMap();
+}
+
+/* ══════════════════════════════════
+   CITY MANAGE
+══════════════════════════════════ */
+function removeCity(id){cities=cities.filter(c=>c!==id);renderList();renderMap();buildBezelSVG();bzUpdate();}
+function addCity(id){if(!cities.includes(id))cities.push(id);closeSearch();renderList();renderMap();buildBezelSVG();bzUpdate();}
+
+/* ══════════════════════════════════
+   CARD DRAG-AND-DROP REORDER
+══════════════════════════════════ */
+let dragId = null;
+
+function cardDragStart(e, id){
+  dragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  // slight delay so the card renders before going semi-transparent
+  setTimeout(()=>{
+    const el = document.querySelector(`.card[data-id="${id}"]`);
+    if(el) el.classList.add('dragging');
+  }, 0);
+}
+
+function cardDragOver(e, id){
+  if(!dragId || dragId === id) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.card').forEach(c =>
+    c.classList.remove('drag-over-top','drag-over-bot')
+  );
+  const rect = e.currentTarget.getBoundingClientRect();
+  const inTop = e.clientY < rect.top + rect.height / 2;
+  e.currentTarget.classList.add(inTop ? 'drag-over-top' : 'drag-over-bot');
+}
+
+function cardDragLeave(e){
+  e.currentTarget.classList.remove('drag-over-top','drag-over-bot');
+}
+
+function cardDrop(e, targetId){
+  e.preventDefault();
+  if(!dragId || dragId === targetId) return;
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  const insertBefore = e.clientY < rect.top + rect.height / 2;
+
+  const si = cities.indexOf(dragId);
+  cities.splice(si, 1);                        // remove first
+  const ti = cities.indexOf(targetId);         // recompute after removal
+  cities.splice(insertBefore ? ti : ti + 1, 0, dragId);
+
+  renderList();
+  renderMap();
+}
+
+function cardDragEnd(){
+  dragId = null;
+  document.querySelectorAll('.card').forEach(c =>
+    c.classList.remove('dragging','drag-over-top','drag-over-bot')
+  );
+}
+
+/* ══════════════════════════════════
+   SEARCH
+══════════════════════════════════ */
+function openSearch(){
+  document.getElementById('overlay').classList.remove('hidden');
+  const inp=document.getElementById('sinp');inp.value='';
+  setTimeout(()=>inp.focus(),40);renderSearch();
+}
+function closeSearch(){document.getElementById('overlay').classList.add('hidden');}
+function bgClick(e){if(e.target===document.getElementById('overlay'))closeSearch();}
+function renderSearch(){
+  const q=document.getElementById('sinp').value.trim().toLowerCase();
+  const el=document.getElementById('sres');
+  const ms=DB.filter(c=>!cities.includes(c.id)&&(c.name.includes(q)||c.en.toLowerCase().includes(q)||c.country.includes(q))).slice(0,30);
+  if(!ms.length){el.innerHTML='<div class="sempty">검색 결과가 없습니다</div>';return;}
+  el.innerHTML=ms.map(c=>{
+    const p=getParts(c.tz);
+    return`<div class="sitem" onclick="addCity('${c.id}')">
+      <span class="sflag">${c.flag}</span>
+      <div class="sinf">
+        <div class="sname">${c.name} <span style="font-size:10px;color:var(--dim)">${c.en}</span></div>
+        <div class="scountry">${c.country}</div>
+      </div>
+      <span class="stime">${p.timeStr}</span>
+    </div>`;
+  }).join('');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();});
+
+/* ══════════════════════════════════
+   BEZEL WORLD TIMER
+══════════════════════════════════ */
+const BZ_CITIES=[
+  {offset:-11,name:'Samoa'},
+  {offset:-10,name:'Honolulu'},
+  {offset:-9, name:'Anchorage'},
+  {offset:-8, name:'L.A.'},
+  {offset:-7, name:'Denver'},
+  {offset:-6, name:'Chicago'},
+  {offset:-5, name:'New York'},
+  {offset:-4, name:'Caracas'},
+  {offset:-3, name:'São Paulo'},
+  {offset:-2, name:'Noronha'},
+  {offset:-1, name:'Azores'},
+  {offset: 0, name:'London'},
+  {offset: 1, name:'Paris'},
+  {offset: 2, name:'Cairo'},
+  {offset: 3, name:'Moscow'},
+  {offset: 4, name:'Dubai'},
+  {offset: 5, name:'Karachi'},
+  {offset: 6, name:'Dhaka'},
+  {offset: 7, name:'Bangkok'},
+  {offset: 8, name:'Beijing'},
+  {offset: 9, name:'Seoul'},
+  {offset:10, name:'Sydney'},
+  {offset:11, name:'Noumea'},
+  {offset:12, name:'Auckland'},
+];
+
+let bzDeg=0;
+let bzDragSt=null;
+let bzManual=false;
+
+/* city UTC integer offset (rounds to nearest hour) */
+function bzCityOffset(tzId){
+  const c=DB.find(x=>x.id===tzId);if(!c)return null;
+  const now=Date.now();
+  const nowD=new Date(now);
+  const utcMin=nowD.getUTCHours()*60+nowD.getUTCMinutes();
+  const lh=localHourAt(now,c.tz);
+  const lm=parseInt(new Intl.DateTimeFormat('en-US',{timeZone:c.tz,minute:'2-digit'}).format(nowD),10);
+  let off=(lh*60+lm)-utcMin;
+  if(off>=12*60)off-=24*60;
+  if(off<=-12*60)off+=24*60;
+  return Math.round(off/60);
+}
+
+/* polar → SVG xy (0° = top/north, clockwise positive) */
+function bzPt(angleDeg,r){
+  const rad=(angleDeg-90)*Math.PI/180;
+  return{x:Math.cos(rad)*r,y:Math.sin(rad)*r};
+}
+
+function buildBezelSVG(){
+  const svg=document.getElementById('bzSVG');if(!svg)return;
+
+  /* radii */
+  const RC=255, RBO=242, RBI=196, RFC=183;
+  const RSO=192, RSI=183, RNM=172, RCL=218;
+
+  /* selected city UTC offsets */
+  const selOffsets=new Set(cities.map(bzCityOffset).filter(v=>v!==null));
+
+  let h='';
+
+  /* outer case */
+  h+=`<circle r="${RC}" fill="#1a2535" stroke="#0d1520" stroke-width="4"/>`;
+  h+=`<circle r="${RC-2}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>`;
+
+  /* ─── BEZEL GROUP (rotates) ─── */
+  h+=`<g id="bzBezel">`;
+  h+=`<circle r="${RBO}" fill="#243050" stroke="#3d5478" stroke-width="1.5"/>`;
+  h+=`<circle r="${RBI}" fill="#1a2535"/>`;
+
+  BZ_CITIES.forEach(c=>{
+    const ang=c.offset*15;
+    const p=bzPt(ang,RCL);
+    const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+11);
+    const sel=selOffsets.has(c.offset);
+    const fc=sel?'#ffcc66':'#8aadd4';
+    const sw=sel?1.8:1.2;
+
+    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${fc}" stroke-width="${sw}"/>`;
+    h+=`<text class="bzcl" data-offset="${c.offset}"
+      x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
+      text-anchor="middle" dominant-baseline="middle"
+      font-size="10" font-weight="${sel?'700':'500'}"
+      font-family="Arial,sans-serif" fill="${fc}"
+      transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})">${c.name}</text>`;
+  });
+  h+=`</g>`; /* end bzBezel */
+
+  /* ─── fixed 24h scale ─── */
+  h+=`<circle r="${RFC}" fill="#dce8f4" stroke="#b8cfe4" stroke-width="1.5"/>`;
+
+  for(let hr=0;hr<24;hr++){
+    const ang=hr*15;
+    const maj=hr%6===0, mid=hr===0||hr===12;
+    const tO=bzPt(ang,RSO+(maj?5:0)),tI=bzPt(ang,RSI);
+    const sc=mid?'#1a3a58':maj?'#2a5280':'#8ab0d0';
+    const tsw=mid?2.5:maj?1.8:1;
+    h+=`<line x1="${tO.x.toFixed(2)}" y1="${tO.y.toFixed(2)}" x2="${tI.x.toFixed(2)}" y2="${tI.y.toFixed(2)}" stroke="${sc}" stroke-width="${tsw}"/>`;
+    const np=bzPt(ang,RNM);
+    h+=`<text x="${np.x.toFixed(2)}" y="${np.y.toFixed(2)}"
+      text-anchor="middle" dominant-baseline="middle"
+      font-size="${maj?14:9}" font-weight="${maj?'700':'400'}"
+      font-family="Arial,sans-serif"
+      fill="${maj?'#1a3a58':'#5a8aaa'}">${String(hr).padStart(2,'0')}</text>`;
+  }
+
+  /* inner face layers */
+  h+=`<circle r="158" fill="#ccdff0" stroke="#a8c8e0" stroke-width="1"/>`;
+  h+=`<circle r="126" fill="#edf4fb" stroke="#c0d8ec" stroke-width="1"/>`;
+
+
+  /* center — Seoul time from bezel */
+  h+=`<text x="0" y="-20" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#5a80a0" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
+  h+=`<text id="bzSeoulLbl" x="0" y="14" text-anchor="middle" dominant-baseline="middle" font-size="30" font-weight="700" fill="#1a3a58" font-family="Arial,sans-serif" letter-spacing="2">00:00</text>`;
+  h+=`<text x="0" y="40" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#7a9ab8" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
+
+  svg.innerHTML=h;
+  bzApplyDeg(bzDeg);
+}
+
+function bzSeoulFromDeg(deg){
+  /* Seoul (UTC+9) label on bezel points to inner scale hour = (9 + deg/15) mod 24 */
+  const h=((9+deg/15)%24+24)%24;
+  const hh=Math.floor(h);
+  const mm=Math.floor((h%1)*60);
+  return`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+
+function bzApplyDeg(deg){
+  bzDeg=((deg%360)+360)%360;
+  const bezel=document.getElementById('bzBezel');if(!bezel)return;
+  bezel.setAttribute('transform',`rotate(${bzDeg.toFixed(3)})`);
+  /* counter-rotate labels so text stays horizontal */
+  document.querySelectorAll('.bzcl').forEach(lbl=>{
+    const cx=parseFloat(lbl.getAttribute('x'));
+    const cy=parseFloat(lbl.getAttribute('y'));
+    lbl.setAttribute('transform',`rotate(${(-bzDeg).toFixed(3)},${cx},${cy})`);
+  });
+  /* update center Seoul display */
+  const sl=document.getElementById('bzSeoulLbl');
+  if(sl)sl.textContent=bzSeoulFromDeg(bzDeg);
+}
+
+function bzGetAngle(e,svg){
+  const r=svg.getBoundingClientRect();
+  const cx=r.left+r.width/2,cy=r.top+r.height/2;
+  const pt=e.touches?e.touches[0]:e;
+  return Math.atan2(pt.clientY-cy,pt.clientX-cx)*180/Math.PI;
+}
+
+function bzUpdate(){
+  if(bzDragSt||bzManual)return;
+  const now=new Date();
+  const utcH=now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
+  bzApplyDeg(utcH*15);
+}
+
+function bzDragStart(e){
+  e.preventDefault();
+  const svg=document.getElementById('bzSVG');
+  const bezel=document.getElementById('bzBezel');
+  if(bezel)bezel.classList.add('nodrift');
+  bzDragSt={startA:bzGetAngle(e,svg),startDeg:bzDeg};
+  document.addEventListener('mousemove',bzDragMove);
+  document.addEventListener('mouseup',bzDragEnd);
+  document.addEventListener('touchmove',bzDragMove,{passive:false});
+  document.addEventListener('touchend',bzDragEnd);
+}
+function bzDragMove(e){
+  if(!bzDragSt)return;e.preventDefault();
+  const svg=document.getElementById('bzSVG');
+  const delta=bzGetAngle(e,svg)-bzDragSt.startA;
+  bzApplyDeg(bzDragSt.startDeg+delta);
+}
+function bzDragEnd(){
+  bzDragSt=null;
+  bzManual=true;
+  const bezel=document.getElementById('bzBezel');
+  if(bezel)bezel.classList.remove('nodrift');
+  document.removeEventListener('mousemove',bzDragMove);
+  document.removeEventListener('mouseup',bzDragEnd);
+  document.removeEventListener('touchmove',bzDragMove);
+  document.removeEventListener('touchend',bzDragEnd);
+}
+
+function initBezel(){
+  buildBezelSVG();
+  bzUpdate();
+  const svg=document.getElementById('bzSVG');if(!svg)return;
+  svg.addEventListener('mousedown',bzDragStart);
+  svg.addEventListener('touchstart',bzDragStart,{passive:false});
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  initRefTs();
+  renderList();
+  initMap();   // async: draws canvas then calls renderMap()
+  initBezel();
+  ticker=setInterval(tick,1000);
+});
+
+// redraw map on resize
+window.addEventListener('resize',()=>{
+  applyTX('instant');
+  if(mapTopo) drawMapCanvas();
+});
+</script>
+</body>
+</html>
