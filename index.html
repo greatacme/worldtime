@@ -469,6 +469,26 @@ let drag      = null;
 let ticker    = null;
 
 /* ══════════════════════════════════
+   LOCALSTORAGE
+══════════════════════════════════ */
+const STORAGE_KEY = 'worldtime_cities';
+
+function saveCitiesToStorage(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cities));
+}
+
+function loadCitiesFromStorage(){
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if(saved){
+    try{
+      cities = JSON.parse(saved);
+    }catch(e){
+      console.error('Failed to load cities:', e);
+    }
+  }
+}
+
+/* ══════════════════════════════════
    TIME HELPERS
 ══════════════════════════════════ */
 function selTime(){ return Date.now() + offsetMin*60000; }
@@ -735,9 +755,11 @@ function updateLabels(){
 function resetToNow(){
   offsetMin=0;
   document.getElementById('slider').value=0;
+  bzManual=false;
   applyTX('quick');
   updateLabels();
   renderMap();
+  bzUpdate();
 }
 
 /* ══════════════════════════════════
@@ -776,8 +798,8 @@ function dragEnd(){
 /* ══════════════════════════════════
    CITY MANAGE
 ══════════════════════════════════ */
-function removeCity(id){cities=cities.filter(c=>c!==id);renderList();renderMap();buildBezelSVG();bzUpdate();}
-function addCity(id){if(!cities.includes(id))cities.push(id);closeSearch();renderList();renderMap();buildBezelSVG();bzUpdate();}
+function removeCity(id){cities=cities.filter(c=>c!==id);saveCitiesToStorage();renderList();renderMap();buildBezelSVG();bzUpdate();}
+function addCity(id){if(!cities.includes(id))cities.push(id);saveCitiesToStorage();closeSearch();renderList();renderMap();buildBezelSVG();bzUpdate();}
 
 /* ══════════════════════════════════
    CARD DRAG-AND-DROP REORDER
@@ -823,6 +845,7 @@ function cardDrop(e, targetId){
   const ti = cities.indexOf(targetId);         // recompute after removal
   cities.splice(insertBefore ? ti : ti + 1, 0, dragId);
 
+  saveCitiesToStorage();
   renderList();
   renderMap();
 }
@@ -1065,6 +1088,7 @@ function initBezel(){
    INIT
 ══════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{
+  loadCitiesFromStorage();
   initRefTs();
   renderList();
   initMap();   // async: draws canvas then calls renderMap()
