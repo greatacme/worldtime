@@ -287,6 +287,10 @@ input[type=range]::-moz-range-thumb{
 #bzSVG:active{cursor:grabbing}
 #bzBezel{transition:transform .8s linear}
 #bzBezel.nodrift{transition:none}
+#bzSVG2{width:100%;height:auto;display:block;cursor:grab;user-select:none;touch-action:none}
+#bzSVG2:active{cursor:grabbing}
+#bzDial2{transition:transform .8s linear}
+#bzDial2.nodrift{transition:none}
 
 /* ── SEARCH ── */
 .overlay{
@@ -360,10 +364,18 @@ input[type=range]::-moz-range-thumb{
   </div>
 </div>
 
-<div class="bzsec">
-  <div class="bztitle">WORLD TIMER BEZEL</div>
-  <div class="bzwrap">
-    <svg id="bzSVG" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+<div style="display:flex;gap:16px;flex-wrap:wrap;width:100%;">
+  <div class="bzsec" style="flex:1;min-width:300px;">
+    <div class="bztitle">WORLD TIMER BEZEL I — City Ring</div>
+    <div class="bzwrap">
+      <svg id="bzSVG" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+  <div class="bzsec" style="flex:1;min-width:300px;">
+    <div class="bztitle">WORLD TIMER BEZEL II — Dial</div>
+    <div class="bzwrap">
+      <svg id="bzSVG2" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
   </div>
 </div>
 
@@ -652,6 +664,7 @@ function tick(){
   applyTX('drift');
   renderMap();
   bzUpdate();
+  bzUpdate2();
 }
 
 /* ══════════════════════════════════
@@ -919,6 +932,9 @@ const BZ_CITIES=[
 let bzDeg=0;
 let bzDragSt=null;
 let bzManual=false;
+let bzDeg2=0;
+let bzDragSt2=null;
+let bzManual2=false;
 
 /* city UTC integer offset (rounds to nearest hour) */
 function bzCityOffset(tzId){
@@ -1011,6 +1027,50 @@ function buildBezelSVG(){
   bzApplyDeg(bzDeg);
 }
 
+function buildBezelSVG2(){
+  const svg=document.getElementById('bzSVG2');if(!svg)return;
+  const RC=255,RBO=242,RBI=196,RFC=183;
+  const RSO=192,RSI=183,RNM=172,RCL=218;
+  const selOffsets=new Set(cities.map(bzCityOffset).filter(v=>v!==null));
+  let h='';
+  h+=`<circle r="${RC}" fill="#1a2535" stroke="#0d1520" stroke-width="4"/>`;
+  h+=`<circle r="${RC-2}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>`;
+  h+=`<g id="bzBezel2">`;
+  h+=`<circle r="${RBO}" fill="#243050" stroke="#3d5478" stroke-width="1.5"/>`;
+  h+=`<circle r="${RBI}" fill="#1a2535"/>`;
+  BZ_CITIES.forEach(c=>{
+    const ang=c.offset*15;
+    const p=bzPt(ang,RCL);
+    const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+11);
+    const sel=selOffsets.has(c.offset);
+    const fc=sel?'#ffcc66':'#8aadd4';
+    const sw=sel?1.8:1.2;
+    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${fc}" stroke-width="${sw}"/>`;
+    h+=`<text class="bzcl2" data-offset="${c.offset}" x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="${sel?'700':'500'}" font-family="Arial,sans-serif" fill="${fc}">${c.name}</text>`;
+  });
+  h+=`</g>`;
+  h+=`<g id="bzDial2">`;
+  h+=`<circle r="${RFC}" fill="#dce8f4" stroke="#b8cfe4" stroke-width="1.5"/>`;
+  for(let hr=0;hr<24;hr++){
+    const ang=hr*15;
+    const maj=hr%6===0,mid=hr===0||hr===12;
+    const tO=bzPt(ang,RSO+(maj?5:0)),tI=bzPt(ang,RSI);
+    const sc=mid?'#1a3a58':maj?'#2a5280':'#8ab0d0';
+    const tsw=mid?2.5:maj?1.8:1;
+    h+=`<line x1="${tO.x.toFixed(2)}" y1="${tO.y.toFixed(2)}" x2="${tI.x.toFixed(2)}" y2="${tI.y.toFixed(2)}" stroke="${sc}" stroke-width="${tsw}"/>`;
+    const np=bzPt(ang,RNM);
+    h+=`<text class="bztick2" x="${np.x.toFixed(2)}" y="${np.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="${maj?14:9}" font-weight="${maj?'700':'400'}" font-family="Arial,sans-serif" fill="${maj?'#1a3a58':'#5a8aaa'}">${String(hr).padStart(2,'0')}</text>`;
+  }
+  h+=`</g>`;
+  h+=`<circle r="158" fill="#ccdff0" stroke="#a8c8e0" stroke-width="1"/>`;
+  h+=`<circle r="126" fill="#edf4fb" stroke="#c0d8ec" stroke-width="1"/>`;
+  h+=`<text x="0" y="-20" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#5a80a0" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
+  h+=`<text id="bzSeoulLbl2" x="0" y="14" text-anchor="middle" dominant-baseline="middle" font-size="30" font-weight="700" fill="#1a3a58" font-family="Arial,sans-serif" letter-spacing="2">00:00</text>`;
+  h+=`<text x="0" y="40" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#7a9ab8" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
+  svg.innerHTML=h;
+  bzApplyDeg2(bzDeg2);
+}
+
 function bzSeoulFromDeg(deg){
   /* Seoul (UTC+9) label on bezel points to inner scale hour = (9 + deg/15) mod 24 */
   const h=((9+deg/15)%24+24)%24;
@@ -1034,6 +1094,19 @@ function bzApplyDeg(deg){
   if(sl)sl.textContent=bzSeoulFromDeg(bzDeg);
 }
 
+function bzApplyDeg2(deg){
+  bzDeg2=((deg%360)+360)%360;
+  const dial=document.getElementById('bzDial2');if(!dial)return;
+  dial.setAttribute('transform',`rotate(${bzDeg2.toFixed(3)})`);
+  document.querySelectorAll('.bztick2').forEach(lbl=>{
+    const cx=parseFloat(lbl.getAttribute('x'));
+    const cy=parseFloat(lbl.getAttribute('y'));
+    lbl.setAttribute('transform',`rotate(${(-bzDeg2).toFixed(3)},${cx},${cy})`);
+  });
+  const sl=document.getElementById('bzSeoulLbl2');
+  if(sl)sl.textContent=bzSeoulFromDeg(bzDeg2);
+}
+
 function bzGetAngle(e,svg){
   const r=svg.getBoundingClientRect();
   const cx=r.left+r.width/2,cy=r.top+r.height/2;
@@ -1046,6 +1119,13 @@ function bzUpdate(){
   const now=new Date();
   const utcH=now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
   bzApplyDeg(utcH*15);
+}
+
+function bzUpdate2(){
+  if(bzDragSt2||bzManual2)return;
+  const now=new Date();
+  const utcH=now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
+  bzApplyDeg2(utcH*15);
 }
 
 function bzDragStart(e){
@@ -1076,12 +1156,48 @@ function bzDragEnd(){
   document.removeEventListener('touchend',bzDragEnd);
 }
 
+function bzDragStart2(e){
+  e.preventDefault();
+  const svg=document.getElementById('bzSVG2');
+  const dial=document.getElementById('bzDial2');
+  if(dial)dial.classList.add('nodrift');
+  bzDragSt2={startA:bzGetAngle(e,svg),startDeg:bzDeg2};
+  document.addEventListener('mousemove',bzDragMove2);
+  document.addEventListener('mouseup',bzDragEnd2);
+  document.addEventListener('touchmove',bzDragMove2,{passive:false});
+  document.addEventListener('touchend',bzDragEnd2);
+}
+function bzDragMove2(e){
+  if(!bzDragSt2)return;e.preventDefault();
+  const svg=document.getElementById('bzSVG2');
+  const delta=bzGetAngle(e,svg)-bzDragSt2.startA;
+  bzApplyDeg2(bzDragSt2.startDeg+delta);
+}
+function bzDragEnd2(){
+  bzDragSt2=null;
+  bzManual2=true;
+  const dial=document.getElementById('bzDial2');
+  if(dial)dial.classList.remove('nodrift');
+  document.removeEventListener('mousemove',bzDragMove2);
+  document.removeEventListener('mouseup',bzDragEnd2);
+  document.removeEventListener('touchmove',bzDragMove2);
+  document.removeEventListener('touchend',bzDragEnd2);
+}
+
 function initBezel(){
   buildBezelSVG();
   bzUpdate();
   const svg=document.getElementById('bzSVG');if(!svg)return;
   svg.addEventListener('mousedown',bzDragStart);
   svg.addEventListener('touchstart',bzDragStart,{passive:false});
+}
+
+function initBezel2(){
+  buildBezelSVG2();
+  bzUpdate2();
+  const svg=document.getElementById('bzSVG2');if(!svg)return;
+  svg.addEventListener('mousedown',bzDragStart2);
+  svg.addEventListener('touchstart',bzDragStart2,{passive:false});
 }
 
 /* ══════════════════════════════════
@@ -1093,6 +1209,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   renderList();
   initMap();   // async: draws canvas then calls renderMap()
   initBezel();
+  initBezel2();
   ticker=setInterval(tick,1000);
 });
 
