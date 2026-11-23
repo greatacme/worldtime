@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Time — 뉴스룸 벽시계</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<style>
+:root {
+  --page:    #eef3f9;
+  --hdr:     #ffffff;
+  --card:    #ffffff;
+  --lpanel:  #f4f8fc;
+  --text:    #18303f;
+  --dim:     #5a7a90;
+  --border:  rgba(30,80,130,.12);
+  --shadow:  0 2px 14px rgba(30,80,130,.09);
+  --accent:  #1260a0;
+  --acc2:    #1580cc;
+  --orange:  #d05808;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  background:#ffffff;
+  color:var(--text);
+  font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+}
+
+/* ── MAP & WALL CLOCKS STAGE ── */
+.wallstage{
+  flex:1;
+  min-height:220px;
+  position:relative;
+  background:#ffffff;
+  overflow:hidden;
+}
+.wallwrap{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+#wallMapCanvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+#wallLeaders{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+#wallClocks{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.wclock{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  pointer-events:auto;
+}
+.wclock-svg{
+  display:block;
+  filter:drop-shadow(0 4px 10px rgba(20,40,65,.18));
+}
+.wclock-lbl{
+  font-size:clamp(11px,1.05vw,14px);
+  font-weight:700;
+  color:#182b3a;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  background:rgba(255,255,255,.84);
+  padding:1px 7px;
+  border-radius:10px;
+  line-height:1.25;
+}
+.wclock-dt{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:rgba(255,255,255,.86);
+  padding:1px 7px 2px;
+  border-radius:8px;
+  line-height:1.2;
+}
+.wclock-date{
+  font-size:clamp(9.5px,0.85vw,11.5px);
+  color:var(--dim);
+  white-space:nowrap;
+}
+.wclock-time{
+  font-size:clamp(11px,1vw,13.5px);
+  font-weight:700;
+  color:var(--accent);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.3px;
+  white-space:nowrap;
+}
+.wall-empty{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  pointer-events:auto;
+  color:var(--dim);
+  font-size:14px;
+}
+
+/* ── BOTTOM CITY SETTINGS BAR ── */
+.citybar{
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 20px;
+  background:#f8fbfe;
+  border-top:1px solid var(--border);
+  box-shadow:0 -2px 10px rgba(30,80,130,.05);
+}
+.citybar.collapsed{
+  display:none;
+}
+.citybar-head{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+}
+.citybar-title{
+  font-size:12px;
+  font-weight:700;
+  color:var(--dim);
+  white-space:nowrap;
+}
+.citybar-cnt{
+  font-size:11px;
+  font-weight:700;
+  color:var(--accent);
+  background:#e6f0fa;
+  padding:1px 7px;
+  border-radius:10px;
+  font-variant-numeric:tabular-nums;
+}
+.citybar-chips{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  max-height:92px;
+  overflow-y:auto;
+}
+.citybar-empty{
+  font-size:12px;
+  color:var(--dim);
+}
+.cchip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px 4px 7px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 1px 4px rgba(30,80,130,.07);
+  font-size:12px;
+  user-select:none;
+  cursor:grab;
+}
+.cchip:active{cursor:grabbing}
+.cchip.dragging{opacity:.35;box-shadow:none}
+.cchip.drag-over-left{box-shadow:-3px 0 0 var(--accent)}
+.cchip.drag-over-right{box-shadow:3px 0 0 var(--accent)}
+.cchip-drag{color:var(--dim);opacity:.5;font-size:12px;line-height:1}
+.cchip-flag{font-size:14px;line-height:1}
+.cchip-name{font-weight:600;color:var(--text);white-space:nowrap}
+.cchip-rm{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:1px solid rgba(208,88,8,.35);
+  background:transparent;
+  color:var(--orange);
+  cursor:pointer;
+  font-size:13px;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .15s;
+}
+.cchip-rm:hover{background:rgba(208,88,8,.12)}
+.badd-pill{
+  flex-shrink:0;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:20px;
+  border:1.5px solid var(--accent);
+  background:#fff;
+  color:var(--accent);
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.badd-pill:hover{
+  background:var(--accent);
+  color:#fff;
+}
+.badd-plus{
+  font-size:15px;
+  line-height:1;
+}
+.citybar-actions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+}
+.btn-mini{
+  padding:6px 11px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--dim);
+  font-size:11.5px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.btn-mini:hover{
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.btn-mini.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+.btn-mini.active:hover{
+  background:var(--acc2);
+  border-color:var(--acc2);
+}
+.btn-mini-link{
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  padding:6px 11px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:var(--lpanel);
+  color:var(--text);
+  font-size:11.5px;
+  font-weight:700;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.btn-mini-link:hover{
+  border-color:var(--accent);
+  color:var(--accent);
+  background:#fff;
+}
+.fab-show{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  z-index:120;
+  padding:6px 13px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.88);
+  color:var(--dim);
+  font-size:11.5px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 2px 10px rgba(30,80,130,.12);
+  opacity:.6;
+  transition:all .15s;
+}
+.fab-show:hover{
+  opacity:1;
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.fab-show.hidden{
+  display:none;
+}
+
+@media (max-width:640px){
+  .citybar{flex-wrap:wrap;padding:8px 12px;gap:8px}
+  .citybar-chips{order:3;flex-basis:100%;max-height:84px}
+  .citybar-actions{margin-left:auto;flex-wrap:wrap}
+  .btn-mini,.btn-mini-link,.badd-pill{padding:5px 10px;font-size:11px}
+}
+
+/* ── SEARCH MODAL ── */
+.overlay{
+  position:fixed;inset:0;
+  background:rgba(15,40,65,.45);backdrop-filter:blur(4px);
+  z-index:300;display:flex;align-items:flex-start;justify-content:center;
+  padding-top:65px;
+}
+.overlay.hidden{display:none}
+.sbox{
+  background:#fff;border:1px solid var(--border);
+  border-radius:12px;width:min(92vw,480px);max-height:min(82vh,580px);
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 60px rgba(15,40,65,.2);
+}
+.shdr{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 15px;border-bottom:1px solid var(--border);
+}
+.sinp{
+  background:transparent;border:none;color:var(--text);
+  font-size:14px;outline:none;flex:1;
+}
+.sinp::placeholder{color:var(--dim)}
+.scls{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer}
+.scls:hover{color:var(--text)}
+.sregbar{
+  display:flex;flex-wrap:wrap;gap:5px;
+  padding:8px 12px;background:#f7fafd;
+  border-bottom:1px solid var(--border);
+}
+.sregbtn{
+  border:1px solid rgba(30,80,130,.18);background:#fff;color:var(--dim);
+  border-radius:14px;padding:3px 9px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.sregbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sregbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.sres{overflow-y:auto;flex:1}
+.sgrp{
+  position:sticky;top:0;z-index:2;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 15px;background:#eef4fa;
+  border-top:1px solid rgba(30,80,130,.08);
+  border-bottom:1px solid rgba(30,80,130,.1);
+  font-size:11px;font-weight:700;color:#2b4c6b;letter-spacing:.2px;
+}
+.sgrpcnt{font-size:10px;font-weight:600;color:var(--dim)}
+.sempty{padding:20px;text-align:center;color:var(--dim);font-size:12px}
+.sitem{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 15px;cursor:pointer;
+  border-bottom:1px solid rgba(30,80,130,.06);transition:background .1s;
+}
+.sitem:hover{background:#f0f6ff}
+.sflag{font-size:19px}
+.sinf{flex:1}
+.sname{font-size:13px;font-weight:600}
+.scountry{font-size:10px;color:var(--dim)}
+.stime{font-size:14px;font-weight:700;color:var(--acc2)}
+</style>
+</head>
+<body>
+
+<main class="wallstage">
+  <div class="wallwrap" id="wallWrap">
+    <canvas id="wallMapCanvas"></canvas>
+    <svg id="wallLeaders"></svg>
+    <div id="wallClocks"></div>
+  </div>
+</main>
+
+<section class="citybar" id="cityBar" aria-label="도시 설정">
+  <div class="citybar-head">
+    <span class="citybar-title">도시 설정</span>
+    <span class="citybar-cnt" id="cityCount">0</span>
+  </div>
+  <div class="citybar-chips" id="cityChips"></div>
+  <div class="citybar-actions">
+    <button type="button" class="badd-pill" onclick="openSearch()" title="도시 추가">
+      <span class="badd-plus">+</span>
+      <span>도시 추가</span>
+    </button>
+    <button type="button" class="btn-mini" id="btnFull" onclick="toggleFullscreen()" title="전체화면 전환">전체화면</button>
+    <button type="button" class="btn-mini" onclick="toggleCityBar()" title="도시 설정 바 숨기기">숨기기</button>
+    <a class="btn-mini-link" href="index.html" title="메인 화면으로 이동">메인</a>
+  </div>
+</section>
+
+<button type="button" class="fab-show hidden" id="btnShowBar" onclick="toggleCityBar()" title="도시 설정 열기">도시 설정</button>
+
+<div class="overlay hidden" id="overlay" onclick="bgClick(event)">
+  <div class="sbox">
+    <div class="shdr">
+      <span style="color:var(--dim)">🔍</span>
+      <input class="sinp" id="sinp" type="text"
+        placeholder="도시, 국가, 지역 검색 (한국어 / English)..."
+        oninput="renderSearch()" autocomplete="off">
+      <button type="button" class="scls" onclick="closeSearch()">✕</button>
+    </div>
+    <div class="sregbar" id="sregbar"></div>
+    <div class="sres" id="sres"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   CITY DATABASE
+══════════════════════════════════ */
+const REGIONS=['동아시아','동남아시아','남·중앙아시아','중동','유럽','북미','중남미','오세아니아','아프리카','표준시'];
+
+const DB=[
+  // 동아시아 (16)
+  {id:'seoul',        region:'동아시아',      name:'서울',            en:'Seoul',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:37.57, lon:126.98},
+  {id:'busan',        region:'동아시아',      name:'부산',            en:'Busan',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:35.18, lon:129.08},
+  {id:'jeju',         region:'동아시아',      name:'제주',            en:'Jeju',            country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:33.50, lon:126.53},
+  {id:'tokyo',        region:'동아시아',      name:'도쿄',            en:'Tokyo',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:35.68, lon:139.69},
+  {id:'osaka',        region:'동아시아',      name:'오사카',          en:'Osaka',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:34.69, lon:135.50},
+  {id:'sapporo',      region:'동아시아',      name:'삿포로',          en:'Sapporo',         country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:43.06, lon:141.35},
+  {id:'fukuoka',      region:'동아시아',      name:'후쿠오카',        en:'Fukuoka',         country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:33.59, lon:130.40},
+  {id:'beijing',      region:'동아시아',      name:'베이징',          en:'Beijing',         country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:39.91, lon:116.39},
+  {id:'shanghai',     region:'동아시아',      name:'상하이',          en:'Shanghai',        country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:31.23, lon:121.47},
+  {id:'shenzhen',     region:'동아시아',      name:'선전',            en:'Shenzhen',        country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:22.54, lon:114.06},
+  {id:'guangzhou',    region:'동아시아',      name:'광저우',          en:'Guangzhou',       country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:23.13, lon:113.26},
+  {id:'chengdu',      region:'동아시아',      name:'청두',            en:'Chengdu',         country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:30.57, lon:104.07},
+  {id:'hongkong',     region:'동아시아',      name:'홍콩',            en:'Hong Kong',       country:'홍콩',          flag:'🇭🇰',tz:'Asia/Hong_Kong',         lat:22.32, lon:114.17},
+  {id:'macau',        region:'동아시아',      name:'마카오',          en:'Macau',           country:'마카오',        flag:'🇲🇴',tz:'Asia/Macau',             lat:22.20, lon:113.54},
+  {id:'taipei',       region:'동아시아',      name:'타이베이',        en:'Taipei',          country:'대만',          flag:'🇹🇼',tz:'Asia/Taipei',            lat:25.03, lon:121.56},
+  {id:'ulaanbaatar',  region:'동아시아',      name:'울란바토르',      en:'Ulaanbaatar',     country:'몽골',          flag:'🇲🇳',tz:'Asia/Ulaanbaatar',       lat:47.92, lon:106.92},
+
+  // 동남아시아 (14)
+  {id:'singapore',    region:'동남아시아',    name:'싱가포르',        en:'Singapore',       country:'싱가포르',      flag:'🇸🇬',tz:'Asia/Singapore',         lat:1.35,  lon:103.82},
+  {id:'bangkok',      region:'동남아시아',    name:'방콕',            en:'Bangkok',         country:'태국',          flag:'🇹🇭',tz:'Asia/Bangkok',           lat:13.75, lon:100.51},
+  {id:'phuket',       region:'동남아시아',    name:'푸켓',            en:'Phuket',          country:'태국',          flag:'🇹🇭',tz:'Asia/Bangkok',           lat:7.88,  lon:98.39},
+  {id:'manila',       region:'동남아시아',    name:'마닐라',          en:'Manila',          country:'필리핀',        flag:'🇵🇭',tz:'Asia/Manila',            lat:14.60, lon:120.98},
+  {id:'cebu',         region:'동남아시아',    name:'세부',            en:'Cebu',            country:'필리핀',        flag:'🇵🇭',tz:'Asia/Manila',            lat:10.32, lon:123.89},
+  {id:'jakarta',      region:'동남아시아',    name:'자카르타',        en:'Jakarta',         country:'인도네시아',    flag:'🇮🇩',tz:'Asia/Jakarta',           lat:-6.21, lon:106.85},
+  {id:'bali',         region:'동남아시아',    name:'발리',            en:'Bali',            country:'인도네시아',    flag:'🇮🇩',tz:'Asia/Makassar',          lat:-8.41, lon:115.19},
+  {id:'kualalumpur',  region:'동남아시아',    name:'쿠알라룸푸르',    en:'Kuala Lumpur',    country:'말레이시아',    flag:'🇲🇾',tz:'Asia/Kuala_Lumpur',      lat:3.14,  lon:101.69},
+  {id:'hanoi',        region:'동남아시아',    name:'하노이',          en:'Hanoi',           country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:21.03, lon:105.85},
+  {id:'hochiminh',    region:'동남아시아',    name:'호치민',          en:'Ho Chi Minh',     country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:10.82, lon:106.63},
+  {id:'danang',       region:'동남아시아',    name:'다낭',            en:'Da Nang',         country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:16.05, lon:108.20},
+  {id:'phnompenh',    region:'동남아시아',    name:'프놈펜',          en:'Phnom Penh',      country:'캄보디아',      flag:'🇰🇭',tz:'Asia/Phnom_Penh',        lat:11.56, lon:104.92},
+  {id:'yangon',       region:'동남아시아',    name:'양곤',            en:'Yangon',          country:'미얀마',        flag:'🇲🇲',tz:'Asia/Yangon',            lat:16.87, lon:96.20},
+  {id:'vientiane',    region:'동남아시아',    name:'비엔티안',        en:'Vientiane',       country:'라오스',        flag:'🇱🇦',tz:'Asia/Vientiane',         lat:17.97, lon:102.63},
+
+  // 남·중앙아시아 (12)
+  {id:'mumbai',       region:'남·중앙아시아', name:'뭄바이',          en:'Mumbai',          country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:19.08, lon:72.88},
+  {id:'delhi',        region:'남·중앙아시아', name:'뉴델리',          en:'New Delhi',       country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:28.61, lon:77.21},
+  {id:'bengaluru',    region:'남·중앙아시아', name:'벵갈루루',        en:'Bengaluru',       country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:12.97, lon:77.59},
+  {id:'kolkata',      region:'남·중앙아시아', name:'콜카타',          en:'Kolkata',         country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:22.57, lon:88.36},
+  {id:'chennai',      region:'남·중앙아시아', name:'첸나이',          en:'Chennai',         country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:13.08, lon:80.27},
+  {id:'karachi',      region:'남·중앙아시아', name:'카라치',          en:'Karachi',         country:'파키스탄',      flag:'🇵🇰',tz:'Asia/Karachi',           lat:24.86, lon:67.01},
+  {id:'islamabad',    region:'남·중앙아시아', name:'이슬라마바드',    en:'Islamabad',       country:'파키스탄',      flag:'🇵🇰',tz:'Asia/Karachi',           lat:33.68, lon:73.05},
+  {id:'dhaka',        region:'남·중앙아시아', name:'다카',            en:'Dhaka',           country:'방글라데시',    flag:'🇧🇩',tz:'Asia/Dhaka',             lat:23.81, lon:90.41},
+  {id:'colombo',      region:'남·중앙아시아', name:'콜롬보',          en:'Colombo',         country:'스리랑카',      flag:'🇱🇰',tz:'Asia/Colombo',           lat:6.93,  lon:79.86},
+  {id:'kathmandu',    region:'남·중앙아시아', name:'카트만두',        en:'Kathmandu',       country:'네팔',          flag:'🇳🇵',tz:'Asia/Kathmandu',         lat:27.72, lon:85.32},
+  {id:'tashkent',     region:'남·중앙아시아', name:'타슈켄트',        en:'Tashkent',        country:'우즈베키스탄',  flag:'🇺🇿',tz:'Asia/Tashkent',          lat:41.30, lon:69.24},
+  {id:'almaty',       region:'남·중앙아시아', name:'알마티',          en:'Almaty',          country:'카자흐스탄',    flag:'🇰🇿',tz:'Asia/Almaty',            lat:43.26, lon:76.95},
+
+  // 중동 (12)
+  {id:'dubai',        region:'중동',          name:'두바이',          en:'Dubai',           country:'UAE',           flag:'🇦🇪',tz:'Asia/Dubai',             lat:25.20, lon:55.27},
+  {id:'abudhabi',     region:'중동',          name:'아부다비',        en:'Abu Dhabi',       country:'UAE',           flag:'🇦🇪',tz:'Asia/Dubai',             lat:24.45, lon:54.38},
+  {id:'riyadh',       region:'중동',          name:'리야드',          en:'Riyadh',          country:'사우디아라비아',flag:'🇸🇦',tz:'Asia/Riyadh',            lat:24.69, lon:46.72},
+  {id:'jeddah',       region:'중동',          name:'제다',            en:'Jeddah',          country:'사우디아라비아',flag:'🇸🇦',tz:'Asia/Riyadh',            lat:21.49, lon:39.19},
+  {id:'doha',         region:'중동',          name:'도하',            en:'Doha',            country:'카타르',        flag:'🇶🇦',tz:'Asia/Qatar',             lat:25.29, lon:51.53},
+  {id:'kuwait',       region:'중동',          name:'쿠웨이트시티',    en:'Kuwait City',     country:'쿠웨이트',      flag:'🇰🇼',tz:'Asia/Kuwait',            lat:29.38, lon:47.98},
+  {id:'muscat',       region:'중동',          name:'무스카트',        en:'Muscat',          country:'오만',          flag:'🇴🇲',tz:'Asia/Muscat',            lat:23.59, lon:58.41},
+  {id:'tel_aviv',     region:'중동',          name:'텔아비브',        en:'Tel Aviv',        country:'이스라엘',      flag:'🇮🇱',tz:'Asia/Jerusalem',         lat:32.07, lon:34.79},
+  {id:'amman',        region:'중동',          name:'암만',            en:'Amman',           country:'요르단',        flag:'🇯🇴',tz:'Asia/Amman',             lat:31.95, lon:35.91},
+  {id:'tehran',       region:'중동',          name:'테헤란',          en:'Tehran',          country:'이란',          flag:'🇮🇷',tz:'Asia/Tehran',            lat:35.69, lon:51.39},
+  {id:'baghdad',      region:'중동',          name:'바그다드',        en:'Baghdad',         country:'이라크',        flag:'🇮🇶',tz:'Asia/Baghdad',           lat:33.31, lon:44.37},
+  {id:'istanbul',     region:'중동',          name:'이스탄불',        en:'Istanbul',        country:'터키',          flag:'🇹🇷',tz:'Europe/Istanbul',        lat:41.01, lon:28.96},
+
+  // 유럽 (34)
+  {id:'london',       region:'유럽',          name:'런던',            en:'London',          country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:51.51, lon:-0.13},
+  {id:'edinburgh',    region:'유럽',          name:'에든버러',        en:'Edinburgh',       country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:55.95, lon:-3.19},
+  {id:'manchester',   region:'유럽',          name:'맨체스터',        en:'Manchester',      country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:53.48, lon:-2.24},
+  {id:'dublin',       region:'유럽',          name:'더블린',          en:'Dublin',          country:'아일랜드',      flag:'🇮🇪',tz:'Europe/Dublin',          lat:53.33, lon:-6.25},
+  {id:'paris',        region:'유럽',          name:'파리',            en:'Paris',           country:'프랑스',        flag:'🇫🇷',tz:'Europe/Paris',           lat:48.85, lon:2.35},
+  {id:'lyon',         region:'유럽',          name:'리옹',            en:'Lyon',            country:'프랑스',        flag:'🇫🇷',tz:'Europe/Paris',           lat:45.76, lon:4.84},
+  {id:'berlin',       region:'유럽',          name:'베를린',          en:'Berlin',          country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:52.52, lon:13.41},
+  {id:'frankfurt',    region:'유럽',          name:'프랑크푸르트',    en:'Frankfurt',       country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:50.11, lon:8.68},
+  {id:'munich',       region:'유럽',          name:'뮌헨',            en:'Munich',          country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:48.14, lon:11.58},
+  {id:'hamburg',      region:'유럽',          name:'함부르크',        en:'Hamburg',         country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:53.55, lon:9.99},
+  {id:'madrid',       region:'유럽',          name:'마드리드',        en:'Madrid',          country:'스페인',        flag:'🇪🇸',tz:'Europe/Madrid',          lat:40.42, lon:-3.70},
+  {id:'barcelona',    region:'유럽',          name:'바르셀로나',      en:'Barcelona',       country:'스페인',        flag:'🇪🇸',tz:'Europe/Madrid',          lat:41.39, lon:2.17},
+  {id:'lisbon',       region:'유럽',          name:'리스본',          en:'Lisbon',          country:'포르투갈',      flag:'🇵🇹',tz:'Europe/Lisbon',          lat:38.72, lon:-9.14},
+  {id:'rome',         region:'유럽',          name:'로마',            en:'Rome',            country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:41.90, lon:12.50},
+  {id:'milan',        region:'유럽',          name:'밀라노',          en:'Milan',           country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:45.46, lon:9.19},
+  {id:'venice',       region:'유럽',          name:'베네치아',        en:'Venice',          country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:45.44, lon:12.32},
+  {id:'amsterdam',    region:'유럽',          name:'암스테르담',      en:'Amsterdam',       country:'네덜란드',      flag:'🇳🇱',tz:'Europe/Amsterdam',       lat:52.37, lon:4.90},
+  {id:'brussels',     region:'유럽',          name:'브뤼셀',          en:'Brussels',        country:'벨기에',        flag:'🇧🇪',tz:'Europe/Brussels',        lat:50.85, lon:4.35},
+  {id:'zurich',       region:'유럽',          name:'취리히',          en:'Zurich',          country:'스위스',        flag:'🇨🇭',tz:'Europe/Zurich',          lat:47.37, lon:8.54},
+  {id:'geneva',       region:'유럽',          name:'제네바',          en:'Geneva',          country:'스위스',        flag:'🇨🇭',tz:'Europe/Zurich',          lat:46.20, lon:6.14},
+  {id:'vienna',       region:'유럽',          name:'빈',              en:'Vienna',          country:'오스트리아',    flag:'🇦🇹',tz:'Europe/Vienna',          lat:48.21, lon:16.37},
+  {id:'prague',       region:'유럽',          name:'프라하',          en:'Prague',          country:'체코',          flag:'🇨🇿',tz:'Europe/Prague',          lat:50.08, lon:14.44},
+  {id:'warsaw',       region:'유럽',          name:'바르샤바',        en:'Warsaw',          country:'폴란드',        flag:'🇵🇱',tz:'Europe/Warsaw',          lat:52.23, lon:21.01},
+  {id:'budapest',     region:'유럽',          name:'부다페스트',      en:'Budapest',        country:'헝가리',        flag:'🇭🇺',tz:'Europe/Budapest',        lat:47.50, lon:19.04},
+  {id:'athens',       region:'유럽',          name:'아테네',          en:'Athens',          country:'그리스',        flag:'🇬🇷',tz:'Europe/Athens',          lat:37.98, lon:23.73},
+  {id:'stockholm',    region:'유럽',          name:'스톡홀름',        en:'Stockholm',       country:'스웨덴',        flag:'🇸🇪',tz:'Europe/Stockholm',       lat:59.33, lon:18.07},
+  {id:'oslo',         region:'유럽',          name:'오슬로',          en:'Oslo',            country:'노르웨이',      flag:'🇳🇴',tz:'Europe/Oslo',            lat:59.91, lon:10.75},
+  {id:'copenhagen',   region:'유럽',          name:'코펜하겐',        en:'Copenhagen',      country:'덴마크',        flag:'🇩🇰',tz:'Europe/Copenhagen',      lat:55.68, lon:12.57},
+  {id:'helsinki',     region:'유럽',          name:'헬싱키',          en:'Helsinki',        country:'핀란드',        flag:'🇫🇮',tz:'Europe/Helsinki',        lat:60.17, lon:24.94},
+  {id:'reykjavik',    region:'유럽',          name:'레이캬비크',      en:'Reykjavik',       country:'아이슬란드',    flag:'🇮🇸',tz:'Atlantic/Reykjavik',     lat:64.15, lon:-21.94},
+  {id:'moscow',       region:'유럽',          name:'모스크바',        en:'Moscow',          country:'러시아',        flag:'🇷🇺',tz:'Europe/Moscow',          lat:55.75, lon:37.62},
+  {id:'stpetersburg', region:'유럽',          name:'상트페테르부르크',en:'St. Petersburg',  country:'러시아',        flag:'🇷🇺',tz:'Europe/Moscow',          lat:59.93, lon:30.34},
+  {id:'kyiv',         region:'유럽',          name:'키이우',          en:'Kyiv',            country:'우크라이나',    flag:'🇺🇦',tz:'Europe/Kiev',            lat:50.45, lon:30.52},
+  {id:'bucharest',    region:'유럽',          name:'부쿠레슈티',      en:'Bucharest',       country:'루마니아',      flag:'🇷🇴',tz:'Europe/Bucharest',       lat:44.43, lon:26.10},
+
+  // 북미 (26)
+  {id:'newyork',      region:'북미',          name:'뉴욕',            en:'New York',        country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:40.71, lon:-74.01},
+  {id:'washington',   region:'북미',          name:'워싱턴 D.C.',     en:'Washington D.C.', country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:38.91, lon:-77.04},
+  {id:'boston',       region:'북미',          name:'보스턴',          en:'Boston',          country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:42.36, lon:-71.06},
+  {id:'atlanta',      region:'북미',          name:'애틀랜타',        en:'Atlanta',         country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:33.75, lon:-84.39},
+  {id:'miami',        region:'북미',          name:'마이애미',        en:'Miami',           country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:25.78, lon:-80.21},
+  {id:'detroit',      region:'북미',          name:'디트로이트',      en:'Detroit',         country:'미국',          flag:'🇺🇸',tz:'America/Detroit',        lat:42.33, lon:-83.05},
+  {id:'chicago',      region:'북미',          name:'시카고',          en:'Chicago',         country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:41.88, lon:-87.63},
+  {id:'dallas',       region:'북미',          name:'댈러스',          en:'Dallas',          country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:32.78, lon:-96.80},
+  {id:'houston',      region:'북미',          name:'휴스턴',          en:'Houston',         country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:29.76, lon:-95.37},
+  {id:'austin',       region:'북미',          name:'오스틴',          en:'Austin',          country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:30.27, lon:-97.74},
+  {id:'minneapolis',  region:'북미',          name:'미니애폴리스',    en:'Minneapolis',     country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:44.98, lon:-93.27},
+  {id:'denver',       region:'북미',          name:'덴버',            en:'Denver',          country:'미국',          flag:'🇺🇸',tz:'America/Denver',         lat:39.74, lon:-104.98},
+  {id:'phoenix',      region:'북미',          name:'피닉스',          en:'Phoenix',         country:'미국',          flag:'🇺🇸',tz:'America/Phoenix',        lat:33.45, lon:-112.07},
+  {id:'lasvegas',     region:'북미',          name:'라스베이거스',    en:'Las Vegas',       country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:36.17, lon:-115.14},
+  {id:'losangeles',   region:'북미',          name:'로스앤젤레스',    en:'Los Angeles',     country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:34.05, lon:-118.24},
+  {id:'sanfran',      region:'북미',          name:'샌프란시스코',    en:'San Francisco',   country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:37.77, lon:-122.42},
+  {id:'sanjose',      region:'북미',          name:'산호세',          en:'San Jose',        country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:37.34, lon:-121.89},
+  {id:'seattle',      region:'북미',          name:'시애틀',          en:'Seattle',         country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:47.61, lon:-122.33},
+  {id:'alaska',       region:'북미',          name:'앵커리지',        en:'Anchorage',       country:'미국(알래스카)',flag:'🇺🇸',tz:'America/Anchorage',      lat:61.22, lon:-149.90},
+  {id:'hawaii',       region:'북미',          name:'호놀룰루',        en:'Honolulu',        country:'하와이',        flag:'🌺', tz:'Pacific/Honolulu',       lat:21.31, lon:-157.86},
+  {id:'toronto',      region:'북미',          name:'토론토',          en:'Toronto',         country:'캐나다',        flag:'🇨🇦',tz:'America/Toronto',        lat:43.65, lon:-79.38},
+  {id:'montreal',     region:'북미',          name:'몬트리올',        en:'Montreal',        country:'캐나다',        flag:'🇨🇦',tz:'America/Toronto',        lat:45.50, lon:-73.57},
+  {id:'vancouver',    region:'북미',          name:'밴쿠버',          en:'Vancouver',       country:'캐나다',        flag:'🇨🇦',tz:'America/Vancouver',      lat:49.28, lon:-123.12},
+  {id:'calgary',      region:'북미',          name:'캘거리',          en:'Calgary',         country:'캐나다',        flag:'🇨🇦',tz:'America/Edmonton',       lat:51.04, lon:-114.07},
+  {id:'mexico',       region:'북미',          name:'멕시코시티',      en:'Mexico City',     country:'멕시코',        flag:'🇲🇽',tz:'America/Mexico_City',    lat:19.43, lon:-99.13},
+  {id:'monterrey',    region:'북미',          name:'몬테레이',        en:'Monterrey',       country:'멕시코',        flag:'🇲🇽',tz:'America/Monterrey',      lat:25.69, lon:-100.32},
+
+  // 중남미 (14)
+  {id:'saopaulo',     region:'중남미',        name:'상파울루',        en:'São Paulo',       country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-23.55,lon:-46.63},
+  {id:'rio',          region:'중남미',        name:'리우데자네이루',  en:'Rio de Janeiro',  country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-22.91,lon:-43.17},
+  {id:'brasilia',     region:'중남미',        name:'브라질리아',      en:'Brasília',        country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-15.79,lon:-47.88},
+  {id:'buenosaires',  region:'중남미',        name:'부에노스아이레스',en:'Buenos Aires',    country:'아르헨티나',    flag:'🇦🇷',tz:'America/Argentina/Buenos_Aires',lat:-34.60,lon:-58.38},
+  {id:'santiago',     region:'중남미',        name:'산티아고',        en:'Santiago',        country:'칠레',          flag:'🇨🇱',tz:'America/Santiago',       lat:-33.45,lon:-70.67},
+  {id:'bogota',       region:'중남미',        name:'보고타',          en:'Bogotá',          country:'콜롬비아',      flag:'🇨🇴',tz:'America/Bogota',         lat:4.71,  lon:-74.07},
+  {id:'lima',         region:'중남미',        name:'리마',            en:'Lima',            country:'페루',          flag:'🇵🇪',tz:'America/Lima',           lat:-12.05,lon:-77.05},
+  {id:'quito',        region:'중남미',        name:'키토',            en:'Quito',           country:'에콰도르',      flag:'🇪🇨',tz:'America/Guayaquil',      lat:-0.18, lon:-78.47},
+  {id:'caracas',      region:'중남미',        name:'카라카스',        en:'Caracas',         country:'베네수엘라',    flag:'🇻🇪',tz:'America/Caracas',        lat:10.48, lon:-66.90},
+  {id:'montevideo',   region:'중남미',        name:'몬테비데오',      en:'Montevideo',      country:'우루과이',      flag:'🇺🇾',tz:'America/Montevideo',     lat:-34.90,lon:-56.16},
+  {id:'panama',       region:'중남미',        name:'파나마시티',      en:'Panama City',     country:'파나마',        flag:'🇵🇦',tz:'America/Panama',         lat:8.98,  lon:-79.52},
+  {id:'sanjose_cr',   region:'중남미',        name:'산호세',          en:'San José',        country:'코스타리카',    flag:'🇨🇷',tz:'America/Costa_Rica',     lat:9.93,  lon:-84.09},
+  {id:'havana',       region:'중남미',        name:'아바나',          en:'Havana',          country:'쿠바',          flag:'🇨🇺',tz:'America/Havana',         lat:23.11, lon:-82.37},
+  {id:'santodomingo', region:'중남미',        name:'산토도밍고',      en:'Santo Domingo',   country:'도미니카공화국',flag:'🇩🇴',tz:'America/Santo_Domingo',  lat:18.49, lon:-69.93},
+
+  // 오세아니아 (10)
+  {id:'sydney',       region:'오세아니아',    name:'시드니',          en:'Sydney',          country:'호주',          flag:'🇦🇺',tz:'Australia/Sydney',       lat:-33.87,lon:151.21},
+  {id:'melbourne',    region:'오세아니아',    name:'멜버른',          en:'Melbourne',       country:'호주',          flag:'🇦🇺',tz:'Australia/Melbourne',    lat:-37.81,lon:144.96},
+  {id:'brisbane',     region:'오세아니아',    name:'브리즈번',        en:'Brisbane',        country:'호주',          flag:'🇦🇺',tz:'Australia/Brisbane',     lat:-27.47,lon:153.03},
+  {id:'perth',        region:'오세아니아',    name:'퍼스',            en:'Perth',           country:'호주',          flag:'🇦🇺',tz:'Australia/Perth',        lat:-31.95,lon:115.86},
+  {id:'adelaide',     region:'오세아니아',    name:'애들레이드',      en:'Adelaide',        country:'호주',          flag:'🇦🇺',tz:'Australia/Adelaide',     lat:-34.93,lon:138.60},
+  {id:'auckland',     region:'오세아니아',    name:'오클랜드',        en:'Auckland',        country:'뉴질랜드',      flag:'🇳🇿',tz:'Pacific/Auckland',       lat:-36.85,lon:174.76},
+  {id:'wellington',   region:'오세아니아',    name:'웰링턴',          en:'Wellington',      country:'뉴질랜드',      flag:'🇳🇿',tz:'Pacific/Auckland',       lat:-41.29,lon:174.78},
+  {id:'fiji',         region:'오세아니아',    name:'수바',            en:'Suva',            country:'피지',          flag:'🇫🇯',tz:'Pacific/Fiji',           lat:-18.14,lon:178.44},
+  {id:'guam',         region:'오세아니아',    name:'괌',              en:'Hagåtña',         country:'괌',            flag:'🇬🇺',tz:'Pacific/Guam',           lat:13.48, lon:144.75},
+  {id:'samoa',        region:'오세아니아',    name:'아피아',          en:'Apia',            country:'사모아',        flag:'🇼🇸',tz:'Pacific/Apia',           lat:-13.83,lon:-171.76},
+
+  // 아프리카 (12)
+  {id:'cairo',        region:'아프리카',      name:'카이로',          en:'Cairo',           country:'이집트',        flag:'🇪🇬',tz:'Africa/Cairo',           lat:30.04, lon:31.24},
+  {id:'casablanca',   region:'아프리카',      name:'카사블랑카',      en:'Casablanca',      country:'모로코',        flag:'🇲🇦',tz:'Africa/Casablanca',      lat:33.59, lon:-7.62},
+  {id:'algiers',      region:'아프리카',      name:'알제',            en:'Algiers',         country:'알제리',        flag:'🇩🇿',tz:'Africa/Algiers',         lat:36.75, lon:3.06},
+  {id:'tunis',        region:'아프리카',      name:'튀니스',          en:'Tunis',           country:'튀니지',        flag:'🇹🇳',tz:'Africa/Tunis',           lat:36.81, lon:10.18},
+  {id:'lagos',        region:'아프리카',      name:'라고스',          en:'Lagos',           country:'나이지리아',    flag:'🇳🇬',tz:'Africa/Lagos',           lat:6.46,  lon:3.38},
+  {id:'accra',        region:'아프리카',      name:'아크라',          en:'Accra',           country:'가나',          flag:'🇬🇭',tz:'Africa/Accra',           lat:5.60,  lon:-0.19},
+  {id:'nairobi',      region:'아프리카',      name:'나이로비',        en:'Nairobi',         country:'케냐',          flag:'🇰🇪',tz:'Africa/Nairobi',         lat:-1.29, lon:36.82},
+  {id:'addisababa',   region:'아프리카',      name:'아디스아바바',    en:'Addis Ababa',     country:'에티오피아',    flag:'🇪🇹',tz:'Africa/Addis_Ababa',     lat:9.03,  lon:38.74},
+  {id:'daressalaam',  region:'아프리카',      name:'다르에스살람',    en:'Dar es Salaam',   country:'탄자니아',      flag:'🇹🇿',tz:'Africa/Dar_es_Salaam',   lat:-6.79, lon:39.21},
+  {id:'johannesburg', region:'아프리카',      name:'요하네스버그',    en:'Johannesburg',    country:'남아프리카',    flag:'🇿🇦',tz:'Africa/Johannesburg',    lat:-26.20,lon:28.04},
+  {id:'capetown',     region:'아프리카',      name:'케이프타운',      en:'Cape Town',       country:'남아프리카',    flag:'🇿🇦',tz:'Africa/Johannesburg',    lat:-33.92,lon:18.42},
+  {id:'dakar',        region:'아프리카',      name:'다카르',          en:'Dakar',           country:'세네갈',        flag:'🇸🇳',tz:'Africa/Dakar',           lat:14.72, lon:-17.47},
+
+  // 표준시 (1)
+  {id:'utc',          region:'표준시',        name:'UTC',             en:'UTC',             country:'세계표준시',    flag:'🌐', tz:'UTC',                    lat:51.48, lon:0.00},
+];
+
+/* ══════════════════════════════════
+   STATE & LOCALSTORAGE
+══════════════════════════════════ */
+const STORAGE_KEY = 'worldtime_cities';
+const DEFAULT_WALL_CITIES = ['seoul','tokyo','london','paris','newyork','sydney'];
+const validIds = new Set(DB.map(c=>c.id));
+
+let cities = [...DEFAULT_WALL_CITIES];
+
+function saveCitiesToStorage(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cities));
+}
+
+function loadCitiesFromStorage(){
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if(saved !== null){
+    try{
+      const parsed = JSON.parse(saved);
+      if(Array.isArray(parsed)){
+        const seen = new Set();
+        cities = parsed.filter(id=>validIds.has(id) && !seen.has(id) && seen.add(id));
+        return;
+      }
+    }catch(e){
+      console.error('Failed to load cities:', e);
+    }
+  }
+  cities = [...DEFAULT_WALL_CITIES];
+}
+
+/* ══════════════════════════════════
+   LIVE TIME HELPER
+══════════════════════════════════ */
+function getParts(tz){
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',
+    timeZoneName:'short'
+  });
+  const p={};
+  fmt.formatToParts(now).forEach(x=>p[x.type]=x.value);
+  let h=parseInt(p.hour,10);if(h===24)h=0;
+  const m=parseInt(p.minute,10),s=parseInt(p.second,10);
+  const wd=new Intl.DateTimeFormat('ko-KR',{timeZone:tz,weekday:'short'}).format(now).replace('요일','');
+  const wdEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short'}).format(now);
+  const monEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,month:'short'}).format(now);
+  const tzAbbr=fmt.formatToParts(now).find(x=>x.type==='timeZoneName')?.value||'';
+  return{
+    h,m,s,
+    timeStr:`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
+    secStr:String(s).padStart(2,'0'),
+    dateStr:`${p.month}-${p.day}(${wd})`,
+    dateStrEn:`${monEn} ${p.day} (${wdEn})`,
+    tzAbbr
+  };
+}
+
+/* ══════════════════════════════════
+   MAP — D3 Natural Earth projection
+══════════════════════════════════ */
+let mapTopo = null;
+let mapLand = null;
+let wallProj = null;
+
+async function initMap(){
+  try{
+    mapTopo = await d3.json(
+      'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+    );
+    const landGeoms = mapTopo.objects.countries.geometries.filter(g=>g.id!=='010');
+    mapLand = topojson.merge(mapTopo, landGeoms);
+    drawWallMap();
+  }catch(e){
+    console.warn('Map data load failed', e);
+    renderWallClocks();
+  }
+}
+
+function drawWallMap(){
+  const canvas = document.getElementById('wallMapCanvas');
+  if(!canvas||!mapLand)return;
+  const wrap = canvas.parentElement;
+  const W = wrap.clientWidth || window.innerWidth || 960;
+  const H = wrap.clientHeight || Math.max(220, window.innerHeight - 60);
+  const padLeft = 0;
+  const padRight = 6;
+  const padTop = 6;
+  const padBottom = 6;
+
+  wallProj = d3.geoNaturalEarth1()
+    .rotate([-11,0])
+    .fitExtent([[padLeft,padTop],[W-padRight,H-padBottom]], mapLand);
+
+  const [[bx0],[bx1]] = d3.geoPath().projection(wallProj).bounds(mapLand);
+  const spareW = Math.max(0, (W - padRight) - (bx1 - bx0));
+  const targetLeft = padLeft + Math.round(spareW * 0.2);
+  const [tx, ty] = wallProj.translate();
+  wallProj.translate([tx + (targetLeft - bx0), ty]);
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const path = d3.geoPath().projection(wallProj).context(ctx);
+  ctx.fillStyle = '#cfd6de';
+  ctx.beginPath();
+  path(mapLand);
+  ctx.fill();
+
+  renderWallClocks();
+}
+
+/* ══════════════════════════════════
+   NEWSROOM WALL CLOCKS
+══════════════════════════════════ */
+function buildWallClockSVG(id,size){
+  let ticks='';
+  for(let i=0;i<60;i++){
+    const rad=(i*6-90)*Math.PI/180;
+    const isHr=i%5===0;
+    const r1=isHr?38.2:40.2;
+    const r2=42;
+    const x1=(Math.cos(rad)*r1).toFixed(2), y1=(Math.sin(rad)*r1).toFixed(2);
+    const x2=(Math.cos(rad)*r2).toFixed(2), y2=(Math.sin(rad)*r2).toFixed(2);
+    ticks+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isHr?'#1a2430':'#7a8694'}" stroke-width="${isHr?'1.4':'0.7'}"/>`;
+  }
+  let nums='';
+  for(let n=1;n<=12;n++){
+    const rad=(n*30-90)*Math.PI/180;
+    const r=32;
+    const nx=(Math.cos(rad)*r).toFixed(2), ny=(Math.sin(rad)*r).toFixed(2);
+    nums+=`<text x="${nx}" y="${ny}" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="600" font-family="Arial,sans-serif" fill="#1a2430">${n}</text>`;
+  }
+  return`<svg class="wclock-svg" style="width:${size}px;height:${size}px" viewBox="-54 -54 108 108" xmlns="http://www.w3.org/2000/svg" aria-label="${id}">
+    <defs>
+      <linearGradient id="wcRim-${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f4f6f8"/>
+        <stop offset="28%" stop-color="#b8c0c8"/>
+        <stop offset="55%" stop-color="#eef2f5"/>
+        <stop offset="82%" stop-color="#8e98a2"/>
+        <stop offset="100%" stop-color="#dce2e8"/>
+      </linearGradient>
+    </defs>
+    <circle r="51" fill="url(#wcRim-${id})" stroke="#9ba4ae" stroke-width="0.8"/>
+    <circle r="45.5" fill="#d0d6dc" stroke="#8c96a0" stroke-width="0.6"/>
+    <circle r="43.5" fill="#ffffff"/>
+    ${ticks}
+    ${nums}
+    <line id="wc-h-${id}" x1="0" y1="4" x2="0" y2="-22" stroke="#18222d" stroke-width="3" stroke-linecap="round"/>
+    <line id="wc-m-${id}" x1="0" y1="5" x2="0" y2="-33" stroke="#18222d" stroke-width="2" stroke-linecap="round"/>
+    <line id="wc-s-${id}" x1="0" y1="7" x2="0" y2="-36" stroke="#d05808" stroke-width="0.9" stroke-linecap="round"/>
+    <circle r="2.6" fill="#18222d"/>
+    <circle r="1.1" fill="#d05808"/>
+  </svg>`;
+}
+
+function renderWallClocks(){
+  const el = document.getElementById('wallClocks');
+  const ldr = document.getElementById('wallLeaders');
+  if(!el)return;
+  const wrap = el.parentElement;
+  const W = wrap.clientWidth || window.innerWidth || 960;
+  const H = wrap.clientHeight || Math.max(220, window.innerHeight - 60);
+
+  const list = cities.map(id=>DB.find(x=>x.id===id)).filter(Boolean);
+  if(!list.length){
+    if(ldr)ldr.innerHTML='';
+    el.innerHTML=`<div class="wall-empty">
+      <span>표시할 도시가 없습니다.</span>
+      <button type="button" class="badd-pill" onclick="openSearch()">
+        <span class="badd-plus">+</span>
+        <span>도시 추가</span>
+      </button>
+    </div>`;
+    return;
+  }
+
+  const scaleBase = Math.min(W, H * 2.15);
+  let D = Math.max(58, Math.min(116, Math.round(scaleBase * 0.074)));
+  if(list.length > 7) D = Math.max(46, Math.round(D * Math.sqrt(7 / list.length)));
+
+  const labelH = 54;
+  const boxW = Math.max(D + 20, 96);
+  const boxH = D + labelH + 8;
+  const rx = boxW / 2 + 3;
+  const ry = boxH / 2 + 3;
+  const minX = boxW / 2 + 6;
+  const maxX = Math.max(minX, W - boxW / 2 - 6);
+  const minY = boxH / 2 + 6;
+  const maxY = Math.max(minY, H - boxH / 2 - 6);
+  const clampX = v => Math.max(minX, Math.min(maxX, v));
+  const clampY = v => Math.max(minY, Math.min(maxY, v));
+
+  const nodes = list.map((c,idx)=>{
+    let tx = (idx + 0.5) / list.length * W;
+    let ty = H * 0.5;
+    if(wallProj){
+      const pt = wallProj([c.lon, c.lat]);
+      if(pt){tx = pt[0]; ty = pt[1];}
+    }
+    return{c,tx,ty,x:clampX(tx),y:clampY(ty)};
+  });
+
+  const iters = 120;
+  for(let iter=0;iter<iters;iter++){
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const ni = nodes[i], nj = nodes[j];
+        let dx = nj.x - ni.x, dy = nj.y - ni.y;
+        if(Math.hypot(dx,dy) < 0.01){
+          const a = ((i*7 + j*13) % 12) * Math.PI / 6;
+          dx = Math.cos(a) * 0.5;
+          dy = Math.sin(a) * 0.5;
+        }
+        const nx = dx / (2 * rx), ny = dy / (2 * ry);
+        const dist = Math.hypot(nx,ny);
+        if(dist < 1){
+          const push = (1 - dist) * 0.55;
+          const ux = (nx / dist) * push * (2 * rx);
+          const uy = (ny / dist) * push * (2 * ry);
+          ni.x -= ux * 0.5; ni.y -= uy * 0.5;
+          nj.x += ux * 0.5; nj.y += uy * 0.5;
+        }
+      }
+    }
+    if(iter < 85){
+      const k = 0.06 * (1 - iter / 85);
+      for(let i=0;i<nodes.length;i++){
+        const n = nodes[i];
+        n.x += (clampX(n.tx) - n.x) * k;
+        n.y += (clampY(n.ty) - n.y) * k;
+      }
+    }
+    for(let i=0;i<nodes.length;i++){
+      nodes[i].x = clampX(nodes[i].x);
+      nodes[i].y = clampY(nodes[i].y);
+    }
+  }
+
+  if(ldr){
+    ldr.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    ldr.innerHTML=nodes.map(n=>{
+      if(Math.hypot(n.x-n.tx,n.y-n.ty)<=D*0.45)return'';
+      return`<line x1="${n.tx.toFixed(1)}" y1="${n.ty.toFixed(1)}" x2="${n.x.toFixed(1)}" y2="${n.y.toFixed(1)}" stroke="rgba(90,122,144,.42)" stroke-width="1.2" stroke-dasharray="3,3"/>`
+        +`<circle cx="${n.tx.toFixed(1)}" cy="${n.ty.toFixed(1)}" r="2.8" fill="#d05808" stroke="#fff" stroke-width="1"/>`;
+    }).join('');
+  }
+
+  el.innerHTML=nodes.map(n=>`<div class="wclock" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
+    ${buildWallClockSVG(n.c.id,D)}
+    <div class="wclock-lbl">${n.c.en}</div>
+    <div class="wclock-dt">
+      <div class="wclock-date" id="wc-d-${n.c.id}"></div>
+      <div class="wclock-time" id="wc-t-${n.c.id}"></div>
+    </div>
+  </div>`).join('');
+
+  updateWallClocks();
+}
+
+function updateWallClocks(){
+  cities.forEach(id=>{
+    const c = DB.find(x=>x.id===id);if(!c)return;
+    const p = getParts(c.tz);
+    const sDeg = p.s * 6;
+    const mDeg = p.m * 6 + p.s * 0.1;
+    const hDeg = ((p.h % 12) + p.m / 60 + p.s / 3600) * 30;
+    const sh = document.getElementById(`wc-h-${c.id}`);
+    const sm = document.getElementById(`wc-m-${c.id}`);
+    const ss = document.getElementById(`wc-s-${c.id}`);
+    const sd = document.getElementById(`wc-d-${c.id}`);
+    const st = document.getElementById(`wc-t-${c.id}`);
+    if(sh)sh.setAttribute('transform',`rotate(${hDeg.toFixed(2)})`);
+    if(sm)sm.setAttribute('transform',`rotate(${mDeg.toFixed(2)})`);
+    if(ss)ss.setAttribute('transform',`rotate(${sDeg.toFixed(2)})`);
+    if(sd)sd.textContent=p.dateStrEn;
+    if(st)st.textContent=`${p.timeStr}:${p.secStr}`;
+  });
+}
+
+/* ══════════════════════════════════
+   CITY SETTINGS CHIPS & REORDER
+══════════════════════════════════ */
+let chipDragId = null;
+
+function renderCityChips(){
+  const el = document.getElementById('cityChips');
+  const cnt = document.getElementById('cityCount');
+  if(cnt) cnt.textContent = String(cities.length);
+  if(!el) return;
+  if(!cities.length){
+    el.innerHTML='<span class="citybar-empty">+ 도시 추가 버튼으로 표시할 도시를 선택하세요</span>';
+    return;
+  }
+  el.innerHTML=cities.map(id=>{
+    const c = DB.find(x=>x.id===id);
+    if(!c)return'';
+    return`<div class="cchip" draggable="true" data-id="${id}"
+      ondragstart="chipDragStart(event,'${id}')"
+      ondragover="chipDragOver(event,'${id}')"
+      ondragleave="chipDragLeave(event)"
+      ondrop="chipDrop(event,'${id}')"
+      ondragend="chipDragEnd()"
+      title="${c.name} (${c.en}) — 드래그하여 순서 변경">
+      <span class="cchip-drag">⠿</span>
+      <span class="cchip-flag">${c.flag}</span>
+      <span class="cchip-name">${c.name}</span>
+      <button type="button" class="cchip-rm"
+        onmousedown="event.stopPropagation()"
+        onclick="event.stopPropagation();removeCity('${id}')"
+        title="${c.name} 삭제">×</button>
+    </div>`;
+  }).join('');
+}
+
+function addCity(id){
+  if(!validIds.has(id))return;
+  if(!cities.includes(id)) cities.push(id);
+  saveCitiesToStorage();
+  closeSearch();
+  renderCityChips();
+  renderWallClocks();
+}
+
+function removeCity(id){
+  cities = cities.filter(c=>c!==id);
+  saveCitiesToStorage();
+  renderCityChips();
+  renderWallClocks();
+}
+
+function chipDragStart(e,id){
+  chipDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  setTimeout(()=>{
+    const el = document.querySelector(`.cchip[data-id="${id}"]`);
+    if(el) el.classList.add('dragging');
+  }, 0);
+}
+
+function chipDragOver(e,id){
+  if(!chipDragId || chipDragId===id)return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.cchip').forEach(c=>
+    c.classList.remove('drag-over-left','drag-over-right')
+  );
+  const rect = e.currentTarget.getBoundingClientRect();
+  const inLeft = e.clientX < rect.left + rect.width / 2;
+  e.currentTarget.classList.add(inLeft ? 'drag-over-left' : 'drag-over-right');
+}
+
+function chipDragLeave(e){
+  e.currentTarget.classList.remove('drag-over-left','drag-over-right');
+}
+
+function chipDrop(e,targetId){
+  e.preventDefault();
+  if(!chipDragId || chipDragId===targetId)return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const insertBefore = e.clientX < rect.left + rect.width / 2;
+  const si = cities.indexOf(chipDragId);
+  if(si === -1)return;
+  cities.splice(si, 1);
+  const ti = cities.indexOf(targetId);
+  cities.splice(insertBefore ? ti : ti + 1, 0, chipDragId);
+  chipDragId = null;
+  saveCitiesToStorage();
+  renderCityChips();
+  renderWallClocks();
+}
+
+function chipDragEnd(){
+  chipDragId = null;
+  document.querySelectorAll('.cchip').forEach(c=>
+    c.classList.remove('dragging','drag-over-left','drag-over-right')
+  );
+}
+
+/* ══════════════════════════════════
+   SEARCH MODAL
+══════════════════════════════════ */
+let searchRegion = 'ALL';
+
+function setSearchRegion(reg){
+  searchRegion = reg;
+  renderSearch();
+}
+
+function openSearch(){
+  searchRegion = 'ALL';
+  document.getElementById('overlay').classList.remove('hidden');
+  const inp = document.getElementById('sinp');
+  inp.value = '';
+  setTimeout(()=>inp.focus(), 40);
+  renderSearch();
+}
+
+function closeSearch(){
+  document.getElementById('overlay').classList.add('hidden');
+}
+
+function bgClick(e){
+  if(e.target===document.getElementById('overlay')) closeSearch();
+}
+
+function renderSearch(){
+  const q = document.getElementById('sinp').value.trim().toLowerCase();
+  const el = document.getElementById('sres');
+  const bar = document.getElementById('sregbar');
+  const matchedAll = DB.filter(c=>!cities.includes(c.id)&&(
+    !q||
+    c.name.toLowerCase().includes(q)||
+    c.en.toLowerCase().includes(q)||
+    c.country.toLowerCase().includes(q)||
+    c.region.toLowerCase().includes(q)
+  ));
+
+  const regCounts = new Map();
+  REGIONS.forEach(r=>regCounts.set(r,0));
+  matchedAll.forEach(c=>regCounts.set(c.region,(regCounts.get(c.region)||0)+1));
+
+  if(searchRegion!=='ALL'&&(regCounts.get(searchRegion)||0)===0){
+    searchRegion = 'ALL';
+  }
+
+  if(bar){
+    let btns = `<button type="button" class="sregbtn${searchRegion==='ALL'?' active':''}" onclick="setSearchRegion('ALL')">전체 (${matchedAll.length})</button>`;
+    REGIONS.forEach(r=>{
+      const cnt = regCounts.get(r)||0;
+      if(!cnt)return;
+      btns+=`<button type="button" class="sregbtn${searchRegion===r?' active':''}" onclick="setSearchRegion('${r}')">${r} (${cnt})</button>`;
+    });
+    bar.innerHTML = btns;
+  }
+
+  const visible = searchRegion==='ALL' ? matchedAll : matchedAll.filter(c=>c.region===searchRegion);
+  if(!visible.length){el.innerHTML='<div class="sempty">검색 결과가 없습니다</div>';return;}
+
+  const groups = new Map();
+  REGIONS.forEach(r=>groups.set(r,[]));
+  visible.forEach(c=>{
+    if(!groups.has(c.region))groups.set(c.region,[]);
+    groups.get(c.region).push(c);
+  });
+
+  let html = '';
+  groups.forEach((items,reg)=>{
+    if(!items.length)return;
+    html+=`<div class="sgrp"><span>${reg}</span><span class="sgrpcnt">${items.length}</span></div>`;
+    html+=items.map(c=>{
+      const p = getParts(c.tz);
+      return`<div class="sitem" onclick="addCity('${c.id}')">
+        <span class="sflag">${c.flag}</span>
+        <div class="sinf">
+          <div class="sname">${c.name} <span style="font-size:10px;color:var(--dim)">${c.en}</span></div>
+          <div class="scountry">${c.country}</div>
+        </div>
+        <span class="stime">${p.timeStr}</span>
+      </div>`;
+    }).join('');
+  });
+  el.innerHTML = html;
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeSearch();
+});
+
+/* ══════════════════════════════════
+   CONTROLS & RESIZE SYNC
+══════════════════════════════════ */
+let redrawRaf = null;
+
+function scheduleRedraw(){
+  if(redrawRaf) cancelAnimationFrame(redrawRaf);
+  redrawRaf = requestAnimationFrame(()=>{
+    redrawRaf = null;
+    if(mapLand) drawWallMap();
+    else renderWallClocks();
+  });
+}
+
+function toggleCityBar(){
+  const bar = document.getElementById('cityBar');
+  const fab = document.getElementById('btnShowBar');
+  if(!bar)return;
+  const collapsed = bar.classList.toggle('collapsed');
+  if(fab) fab.classList.toggle('hidden', !collapsed);
+  scheduleRedraw();
+}
+
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen?.().catch(err=>{
+      console.warn('Fullscreen failed:', err);
+    });
+  }else{
+    document.exitFullscreen?.().catch(err=>{
+      console.warn('Exit fullscreen failed:', err);
+    });
+  }
+}
+
+function updateFullscreenBtn(){
+  const btn = document.getElementById('btnFull');
+  if(!btn)return;
+  const isFull = !!document.fullscreenElement;
+  btn.classList.toggle('active', isFull);
+  btn.textContent = isFull ? '전체화면 종료' : '전체화면';
+}
+
+document.addEventListener('fullscreenchange',()=>{
+  updateFullscreenBtn();
+  scheduleRedraw();
+});
+
+window.addEventListener('storage',e=>{
+  if(e.key===STORAGE_KEY || e.key===null){
+    loadCitiesFromStorage();
+    renderCityChips();
+    renderWallClocks();
+    if(!document.getElementById('overlay').classList.contains('hidden')){
+      renderSearch();
+    }
+  }
+});
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  loadCitiesFromStorage();
+  renderCityChips();
+  initMap();
+
+  const wrap = document.getElementById('wallWrap');
+  if(wrap && typeof ResizeObserver !== 'undefined'){
+    new ResizeObserver(()=>scheduleRedraw()).observe(wrap);
+  }
+  window.addEventListener('resize', scheduleRedraw);
+  setInterval(updateWallClocks, 1000);
+});
+</script>
+</body>
+</html>
