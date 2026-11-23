@@ -25,10 +25,10 @@
   --orng-gl: rgba(208,88,8,.7);
 
   /* ── TAPE COLOURS (pastel day / night) ── */
-  --c-day:   #c2e2f8;   /* pastel sky blue  */
-  --c-night: #3a5878;   /* muted slate navy */
-  --c-day-t: #1a3a58;   /* label on day     */
-  --c-nit-t: #b0cfe8;   /* label on night   */
+  --c-day:   #dcf0fc;   /* bright airy pastel sky blue */
+  --c-night: #6282aa;   /* bright pastel periwinkle-slate */
+  --c-day-t: #1f4b70;   /* label on day */
+  --c-nit-t: #f2f8ff;   /* label on night */
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -53,6 +53,83 @@ body{
   font-size:12px;font-weight:700;transition:background .2s;
 }
 .btn-now:hover{background:var(--acc2)}
+
+/* ── NEWSROOM WALL CLOCKS ── */
+.wallsec{
+  background:#ffffff;
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 10px rgba(30,80,130,.05);
+  padding:0;
+}
+.wallwrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:2.25/1;
+  overflow:hidden;
+}
+#wallMapCanvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+#wallLeaders{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+#wallClocks{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.wclock{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  pointer-events:auto;
+}
+.wclock-svg{
+  display:block;
+  filter:drop-shadow(0 4px 10px rgba(20,40,65,.18));
+}
+.wclock-lbl{
+  font-size:clamp(10px,1vw,13px);
+  font-weight:700;
+  color:#182b3a;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  background:rgba(255,255,255,.82);
+  padding:1px 7px;
+  border-radius:10px;
+  line-height:1.25;
+}
+.wclock-dt{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:rgba(255,255,255,.84);
+  padding:1px 7px 2px;
+  border-radius:8px;
+  line-height:1.2;
+}
+.wclock-date{
+  font-size:clamp(9px,0.85vw,10.5px);
+  color:var(--dim);
+  white-space:nowrap;
+}
+.wclock-time{
+  font-size:clamp(10px,0.95vw,12px);
+  font-weight:700;
+  color:var(--accent);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.3px;
+  white-space:nowrap;
+}
 
 /* ── CITY SECTION ── */
 .csec{padding:10px 18px 4px}
@@ -159,7 +236,7 @@ body{
   display:flex;flex-direction:column;
   align-items:center;justify-content:flex-start;
   padding-top:5px;
-  border-right:1px solid rgba(255,255,255,.08);
+  border-right:1px solid rgba(255,255,255,.22);
   position:relative;
 }
 /* period colours: day / night only */
@@ -186,9 +263,9 @@ body{
   flex-shrink:0;
 }
 .tc.day   .ttick{ background:rgba(30,80,120,.25) }
-.tc.night .ttick{ background:rgba(180,215,240,.25) }
+.tc.night .ttick{ background:rgba(240,248,255,.38) }
 .tc.maj .ttick  { opacity:.7 }
-.tc.mid         { border-left:2px solid rgba(255,255,255,.5) }
+.tc.mid         { border-left:2px solid rgba(255,255,255,.68) }
 .tc.mid .ttick  { opacity:1 }
 
 /* ── ADD ROW ── */
@@ -223,7 +300,7 @@ body{
 input[type=range]{
   -webkit-appearance:none;appearance:none;
   flex:1;height:5px;border-radius:3px;
-  background:rgba(30,80,130,.15);outline:none;cursor:pointer;
+  background:#d6e7f5;outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;
@@ -238,62 +315,14 @@ input[type=range]::-moz-range-thumb{
   background:var(--orange);border:none;cursor:pointer;
 }
 
-/* ── MAP ── */
-.mapsec{padding:9px 0 14px;display:flex;flex-direction:column;margin:0 -22px;width:calc(100% + 44px)}
-.maptitle{font-size:10px;color:var(--dim);letter-spacing:.5px;margin-bottom:5px;font-weight:600;padding:0 18px}
-.mapwrap{
-  position:relative;
-  height:max(380px,45vh);
-  border-left:none;border-right:none;
-  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
-  border-radius:0;
-  overflow:hidden;background:#b8d4ea;
-  box-shadow:var(--shadow);
-}
-#mapCanvas{display:block;width:100%;height:100%}
-#mapMarkers{position:absolute;inset:0;pointer-events:none}
-.mm{position:absolute;transform:translate(-50%,-50%);pointer-events:all;cursor:pointer;z-index:3}
-.mdot{
-  width:10px;height:10px;
-  background:var(--orange);border:2px solid #fff;border-radius:50%;
-  box-shadow:0 0 6px var(--orng-gl),0 2px 5px rgba(0,0,0,.18);
-  transition:transform .15s;
-}
-.mm:hover .mdot{transform:scale(1.5)}
-.mtip{
-  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
-  background:rgba(255,255,255,.96);border:1px solid var(--border);
-  border-radius:4px;padding:2px 7px;
-  font-size:10px;white-space:nowrap;color:var(--text);
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-  opacity:0;transition:opacity .18s;pointer-events:none;
-}
-.mm:hover .mtip{opacity:1}
-.mlbl{
-  position:absolute;top:12px;left:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,.82);
-  border:1px solid rgba(30,80,130,.18);
-  border-radius:3px;
-  padding:1px 5px;
-  font-size:10px;font-weight:600;
-  color:#1a3050;white-space:nowrap;
-  pointer-events:none;
-  box-shadow:0 1px 3px rgba(0,0,0,.12);
-}
-
 /* ── BEZEL WORLD TIMER ── */
 .bzsec{padding:9px 18px 22px;display:flex;flex-direction:column;align-items:center}
 .bztitle{font-size:10px;color:var(--dim);letter-spacing:.5px;margin-bottom:8px;font-weight:600;align-self:flex-start}
 .bzwrap{width:min(100%,520px)}
-#bzSVG{width:100%;height:auto;display:block;cursor:grab;user-select:none;touch-action:none}
+#bzSVG{width:100%;height:auto;display:block;cursor:grab;user-select:none;touch-action:none;filter:drop-shadow(0 10px 22px rgba(15,35,58,.22))}
 #bzSVG:active{cursor:grabbing}
-#bzBezel{transition:transform .8s linear}
-#bzBezel.nodrift{transition:none}
-#bzSVG2{width:100%;height:auto;display:block;cursor:grab;user-select:none;touch-action:none}
+#bzSVG2{width:100%;height:auto;display:block;cursor:grab;user-select:none;touch-action:none;filter:drop-shadow(0 10px 22px rgba(15,35,58,.22))}
 #bzSVG2:active{cursor:grabbing}
-#bzDial2{transition:transform .8s linear}
-#bzDial2.nodrift{transition:none}
 
 /* ── SEARCH ── */
 .overlay{
@@ -305,7 +334,7 @@ input[type=range]::-moz-range-thumb{
 .overlay.hidden{display:none}
 .sbox{
   background:#fff;border:1px solid var(--border);
-  border-radius:12px;width:400px;max-height:460px;
+  border-radius:12px;width:min(92vw,480px);max-height:min(82vh,580px);
   display:flex;flex-direction:column;overflow:hidden;
   box-shadow:0 24px 60px rgba(15,40,65,.2);
 }
@@ -320,7 +349,28 @@ input[type=range]::-moz-range-thumb{
 .sinp::placeholder{color:var(--dim)}
 .scls{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer}
 .scls:hover{color:var(--text)}
+.sregbar{
+  display:flex;flex-wrap:wrap;gap:5px;
+  padding:8px 12px;background:#f7fafd;
+  border-bottom:1px solid var(--border);
+}
+.sregbtn{
+  border:1px solid rgba(30,80,130,.18);background:#fff;color:var(--dim);
+  border-radius:14px;padding:3px 9px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.sregbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sregbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .sres{overflow-y:auto;flex:1}
+.sgrp{
+  position:sticky;top:0;z-index:2;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 15px;background:#eef4fa;
+  border-top:1px solid rgba(30,80,130,.08);
+  border-bottom:1px solid rgba(30,80,130,.1);
+  font-size:11px;font-weight:700;color:#2b4c6b;letter-spacing:.2px;
+}
+.sgrpcnt{font-size:10px;font-weight:600;color:var(--dim)}
 .sempty{padding:20px;text-align:center;color:var(--dim);font-size:12px}
 .sitem{
   display:flex;align-items:center;gap:10px;
@@ -342,6 +392,14 @@ input[type=range]::-moz-range-thumb{
   <button class="btn-now" onclick="resetToNow()">현재 시각</button>
 </div>
 
+<div class="wallsec">
+  <div class="wallwrap">
+    <canvas id="wallMapCanvas"></canvas>
+    <svg id="wallLeaders"></svg>
+    <div id="wallClocks"></div>
+  </div>
+</div>
+
 <div class="csec">
   <div id="cityList"></div>
   <div class="addrow">
@@ -356,14 +414,6 @@ input[type=range]::-moz-range-thumb{
     <input type="range" id="slider" min="-1440" max="1440" step="1" value="0"
            oninput="onSlider(this.value)">
     <span class="slbl">+24h</span>
-  </div>
-</div>
-
-<div class="mapsec">
-  <div class="maptitle">WORLD MAP</div>
-  <div class="mapwrap">
-    <canvas id="mapCanvas"></canvas>
-    <div id="mapMarkers"></div>
   </div>
 </div>
 
@@ -387,10 +437,11 @@ input[type=range]::-moz-range-thumb{
     <div class="shdr">
       <span style="color:var(--dim)">🔍</span>
       <input class="sinp" id="sinp" type="text"
-        placeholder="도시 검색 (한국어 / English)..."
+        placeholder="도시, 국가, 지역 검색 (한국어 / English)..."
         oninput="renderSearch()" autocomplete="off">
       <button class="scls" onclick="closeSearch()">✕</button>
     </div>
+    <div class="sregbar" id="sregbar"></div>
     <div class="sres" id="sres"></div>
   </div>
 </div>
@@ -399,75 +450,179 @@ input[type=range]::-moz-range-thumb{
 /* ══════════════════════════════════
    CITY DATABASE
 ══════════════════════════════════ */
+const REGIONS=['동아시아','동남아시아','남·중앙아시아','중동','유럽','북미','중남미','오세아니아','아프리카','표준시'];
+
 const DB=[
-  {id:'seoul',        name:'서울',            en:'Seoul',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:37.57, lon:126.98},
-  {id:'busan',        name:'부산',            en:'Busan',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:35.18, lon:129.08},
-  {id:'tokyo',        name:'도쿄',            en:'Tokyo',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:35.68, lon:139.69},
-  {id:'osaka',        name:'오사카',          en:'Osaka',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:34.69, lon:135.50},
-  {id:'beijing',      name:'베이징',          en:'Beijing',         country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:39.91, lon:116.39},
-  {id:'shanghai',     name:'상하이',          en:'Shanghai',        country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:31.23, lon:121.47},
-  {id:'hongkong',     name:'홍콩',            en:'Hong Kong',       country:'홍콩',          flag:'🇭🇰',tz:'Asia/Hong_Kong',         lat:22.32, lon:114.17},
-  {id:'taipei',       name:'타이베이',        en:'Taipei',          country:'대만',          flag:'🇹🇼',tz:'Asia/Taipei',            lat:25.03, lon:121.56},
-  {id:'singapore',    name:'싱가포르',        en:'Singapore',       country:'싱가포르',      flag:'🇸🇬',tz:'Asia/Singapore',         lat:1.35,  lon:103.82},
-  {id:'bangkok',      name:'방콕',            en:'Bangkok',         country:'태국',          flag:'🇹🇭',tz:'Asia/Bangkok',           lat:13.75, lon:100.51},
-  {id:'manila',       name:'마닐라',          en:'Manila',          country:'필리핀',        flag:'🇵🇭',tz:'Asia/Manila',            lat:14.60, lon:120.98},
-  {id:'jakarta',      name:'자카르타',        en:'Jakarta',         country:'인도네시아',    flag:'🇮🇩',tz:'Asia/Jakarta',           lat:-6.21, lon:106.85},
-  {id:'kualalumpur',  name:'쿠알라룸푸르',    en:'Kuala Lumpur',    country:'말레이시아',    flag:'🇲🇾',tz:'Asia/Kuala_Lumpur',      lat:3.14,  lon:101.69},
-  {id:'hanoi',        name:'하노이',          en:'Hanoi',           country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:21.03, lon:105.85},
-  {id:'hochiminh',    name:'호치민',          en:'Ho Chi Minh',     country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:10.82, lon:106.63},
-  {id:'dhaka',        name:'다카',            en:'Dhaka',           country:'방글라데시',    flag:'🇧🇩',tz:'Asia/Dhaka',             lat:23.81, lon:90.41},
-  {id:'mumbai',       name:'뭄바이',          en:'Mumbai',          country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:19.08, lon:72.88},
-  {id:'delhi',        name:'뉴델리',          en:'New Delhi',       country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:28.61, lon:77.21},
-  {id:'karachi',      name:'카라치',          en:'Karachi',         country:'파키스탄',      flag:'🇵🇰',tz:'Asia/Karachi',           lat:24.86, lon:67.01},
-  {id:'dubai',        name:'두바이',          en:'Dubai',           country:'UAE',           flag:'🇦🇪',tz:'Asia/Dubai',             lat:25.20, lon:55.27},
-  {id:'riyadh',       name:'리야드',          en:'Riyadh',          country:'사우디아라비아',flag:'🇸🇦',tz:'Asia/Riyadh',            lat:24.69, lon:46.72},
-  {id:'tehran',       name:'테헤란',          en:'Tehran',          country:'이란',          flag:'🇮🇷',tz:'Asia/Tehran',            lat:35.69, lon:51.39},
-  {id:'tel_aviv',     name:'텔아비브',        en:'Tel Aviv',        country:'이스라엘',      flag:'🇮🇱',tz:'Asia/Jerusalem',         lat:32.07, lon:34.79},
-  {id:'istanbul',     name:'이스탄불',        en:'Istanbul',        country:'터키',          flag:'🇹🇷',tz:'Europe/Istanbul',        lat:41.01, lon:28.96},
-  {id:'tashkent',     name:'타슈켄트',        en:'Tashkent',        country:'우즈베키스탄',  flag:'🇺🇿',tz:'Asia/Tashkent',          lat:41.30, lon:69.24},
-  {id:'almaty',       name:'알마티',          en:'Almaty',          country:'카자흐스탄',    flag:'🇰🇿',tz:'Asia/Almaty',            lat:43.26, lon:76.95},
-  {id:'ulaanbaatar',  name:'울란바토르',      en:'Ulaanbaatar',     country:'몽골',          flag:'🇲🇳',tz:'Asia/Ulaanbaatar',       lat:47.92, lon:106.92},
-  {id:'sydney',       name:'시드니',          en:'Sydney',          country:'호주',          flag:'🇦🇺',tz:'Australia/Sydney',       lat:-33.87,lon:151.21},
-  {id:'melbourne',    name:'멜버른',          en:'Melbourne',       country:'호주',          flag:'🇦🇺',tz:'Australia/Melbourne',    lat:-37.81,lon:144.96},
-  {id:'auckland',     name:'오클랜드',        en:'Auckland',        country:'뉴질랜드',      flag:'🇳🇿',tz:'Pacific/Auckland',       lat:-36.85,lon:174.76},
-  {id:'london',       name:'런던',            en:'London',          country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:51.51, lon:-0.13},
-  {id:'paris',        name:'파리',            en:'Paris',           country:'프랑스',        flag:'🇫🇷',tz:'Europe/Paris',           lat:48.85, lon:2.35},
-  {id:'berlin',       name:'베를린',          en:'Berlin',          country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:52.52, lon:13.41},
-  {id:'madrid',       name:'마드리드',        en:'Madrid',          country:'스페인',        flag:'🇪🇸',tz:'Europe/Madrid',          lat:40.42, lon:-3.70},
-  {id:'rome',         name:'로마',            en:'Rome',            country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:41.90, lon:12.50},
-  {id:'amsterdam',    name:'암스테르담',      en:'Amsterdam',       country:'네덜란드',      flag:'🇳🇱',tz:'Europe/Amsterdam',       lat:52.37, lon:4.90},
-  {id:'zurich',       name:'취리히',          en:'Zurich',          country:'스위스',        flag:'🇨🇭',tz:'Europe/Zurich',          lat:47.37, lon:8.54},
-  {id:'vienna',       name:'빈',              en:'Vienna',          country:'오스트리아',    flag:'🇦🇹',tz:'Europe/Vienna',          lat:48.21, lon:16.37},
-  {id:'warsaw',       name:'바르샤바',        en:'Warsaw',          country:'폴란드',        flag:'🇵🇱',tz:'Europe/Warsaw',          lat:52.23, lon:21.01},
-  {id:'athens',       name:'아테네',          en:'Athens',          country:'그리스',        flag:'🇬🇷',tz:'Europe/Athens',          lat:37.98, lon:23.73},
-  {id:'stockholm',    name:'스톡홀름',        en:'Stockholm',       country:'스웨덴',        flag:'🇸🇪',tz:'Europe/Stockholm',       lat:59.33, lon:18.07},
-  {id:'helsinki',     name:'헬싱키',          en:'Helsinki',        country:'핀란드',        flag:'🇫🇮',tz:'Europe/Helsinki',        lat:60.17, lon:24.94},
-  {id:'moscow',       name:'모스크바',        en:'Moscow',          country:'러시아',        flag:'🇷🇺',tz:'Europe/Moscow',          lat:55.75, lon:37.62},
-  {id:'kyiv',         name:'키이우',          en:'Kyiv',            country:'우크라이나',    flag:'🇺🇦',tz:'Europe/Kiev',            lat:50.45, lon:30.52},
-  {id:'lisbon',       name:'리스본',          en:'Lisbon',          country:'포르투갈',      flag:'🇵🇹',tz:'Europe/Lisbon',          lat:38.72, lon:-9.14},
-  {id:'dublin',       name:'더블린',          en:'Dublin',          country:'아일랜드',      flag:'🇮🇪',tz:'Europe/Dublin',          lat:53.33, lon:-6.25},
-  {id:'newyork',      name:'뉴욕',            en:'New York',        country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:40.71, lon:-74.01},
-  {id:'losangeles',   name:'로스앤젤레스',    en:'Los Angeles',     country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:34.05, lon:-118.24},
-  {id:'chicago',      name:'시카고',          en:'Chicago',         country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:41.88, lon:-87.63},
-  {id:'miami',        name:'마이애미',        en:'Miami',           country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:25.78, lon:-80.21},
-  {id:'seattle',      name:'시애틀',          en:'Seattle',         country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:47.61, lon:-122.33},
-  {id:'sanfran',      name:'샌프란시스코',    en:'San Francisco',   country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:37.77, lon:-122.42},
-  {id:'denver',       name:'덴버',            en:'Denver',          country:'미국',          flag:'🇺🇸',tz:'America/Denver',         lat:39.74, lon:-104.98},
-  {id:'toronto',      name:'토론토',          en:'Toronto',         country:'캐나다',        flag:'🇨🇦',tz:'America/Toronto',        lat:43.65, lon:-79.38},
-  {id:'vancouver',    name:'밴쿠버',          en:'Vancouver',       country:'캐나다',        flag:'🇨🇦',tz:'America/Vancouver',      lat:49.28, lon:-123.12},
-  {id:'mexico',       name:'멕시코시티',      en:'Mexico City',     country:'멕시코',        flag:'🇲🇽',tz:'America/Mexico_City',    lat:19.43, lon:-99.13},
-  {id:'bogota',       name:'보고타',          en:'Bogotá',          country:'콜롬비아',      flag:'🇨🇴',tz:'America/Bogota',         lat:4.71,  lon:-74.07},
-  {id:'lima',         name:'리마',            en:'Lima',            country:'페루',          flag:'🇵🇪',tz:'America/Lima',           lat:-12.05,lon:-77.05},
-  {id:'saopaulo',     name:'상파울루',        en:'São Paulo',       country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-23.55,lon:-46.63},
-  {id:'buenosaires',  name:'부에노스아이레스',en:'Buenos Aires',    country:'아르헨티나',    flag:'🇦🇷',tz:'America/Argentina/Buenos_Aires',lat:-34.60,lon:-58.38},
-  {id:'alaska',       name:'앵커리지',        en:'Anchorage',       country:'미국(알래스카)',flag:'🇺🇸',tz:'America/Anchorage',      lat:61.22, lon:-149.90},
-  {id:'hawaii',       name:'호놀룰루',        en:'Honolulu',        country:'하와이',        flag:'🌺', tz:'Pacific/Honolulu',        lat:21.31, lon:-157.86},
-  {id:'cairo',        name:'카이로',          en:'Cairo',           country:'이집트',        flag:'🇪🇬',tz:'Africa/Cairo',           lat:30.04, lon:31.24},
-  {id:'lagos',        name:'라고스',          en:'Lagos',           country:'나이지리아',    flag:'🇳🇬',tz:'Africa/Lagos',           lat:6.46,  lon:3.38},
-  {id:'nairobi',      name:'나이로비',        en:'Nairobi',         country:'케냐',          flag:'🇰🇪',tz:'Africa/Nairobi',         lat:-1.29, lon:36.82},
-  {id:'johannesburg', name:'요하네스버그',    en:'Johannesburg',    country:'남아프리카',    flag:'🇿🇦',tz:'Africa/Johannesburg',    lat:-26.20,lon:28.04},
-  {id:'casablanca',   name:'카사블랑카',      en:'Casablanca',      country:'모로코',        flag:'🇲🇦',tz:'Africa/Casablanca',      lat:33.59, lon:-7.62},
-  {id:'utc',          name:'UTC',             en:'UTC',             country:'세계표준시',    flag:'🌐', tz:'UTC',                     lat:51.48, lon:0.00},
+  // 동아시아 (16)
+  {id:'seoul',        region:'동아시아',      name:'서울',            en:'Seoul',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:37.57, lon:126.98},
+  {id:'busan',        region:'동아시아',      name:'부산',            en:'Busan',           country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:35.18, lon:129.08},
+  {id:'jeju',         region:'동아시아',      name:'제주',            en:'Jeju',            country:'한국',          flag:'🇰🇷',tz:'Asia/Seoul',             lat:33.50, lon:126.53},
+  {id:'tokyo',        region:'동아시아',      name:'도쿄',            en:'Tokyo',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:35.68, lon:139.69},
+  {id:'osaka',        region:'동아시아',      name:'오사카',          en:'Osaka',           country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:34.69, lon:135.50},
+  {id:'sapporo',      region:'동아시아',      name:'삿포로',          en:'Sapporo',         country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:43.06, lon:141.35},
+  {id:'fukuoka',      region:'동아시아',      name:'후쿠오카',        en:'Fukuoka',         country:'일본',          flag:'🇯🇵',tz:'Asia/Tokyo',             lat:33.59, lon:130.40},
+  {id:'beijing',      region:'동아시아',      name:'베이징',          en:'Beijing',         country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:39.91, lon:116.39},
+  {id:'shanghai',     region:'동아시아',      name:'상하이',          en:'Shanghai',        country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:31.23, lon:121.47},
+  {id:'shenzhen',     region:'동아시아',      name:'선전',            en:'Shenzhen',        country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:22.54, lon:114.06},
+  {id:'guangzhou',    region:'동아시아',      name:'광저우',          en:'Guangzhou',       country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:23.13, lon:113.26},
+  {id:'chengdu',      region:'동아시아',      name:'청두',            en:'Chengdu',         country:'중국',          flag:'🇨🇳',tz:'Asia/Shanghai',          lat:30.57, lon:104.07},
+  {id:'hongkong',     region:'동아시아',      name:'홍콩',            en:'Hong Kong',       country:'홍콩',          flag:'🇭🇰',tz:'Asia/Hong_Kong',         lat:22.32, lon:114.17},
+  {id:'macau',        region:'동아시아',      name:'마카오',          en:'Macau',           country:'마카오',        flag:'🇲🇴',tz:'Asia/Macau',             lat:22.20, lon:113.54},
+  {id:'taipei',       region:'동아시아',      name:'타이베이',        en:'Taipei',          country:'대만',          flag:'🇹🇼',tz:'Asia/Taipei',            lat:25.03, lon:121.56},
+  {id:'ulaanbaatar',  region:'동아시아',      name:'울란바토르',      en:'Ulaanbaatar',     country:'몽골',          flag:'🇲🇳',tz:'Asia/Ulaanbaatar',       lat:47.92, lon:106.92},
+
+  // 동남아시아 (14)
+  {id:'singapore',    region:'동남아시아',    name:'싱가포르',        en:'Singapore',       country:'싱가포르',      flag:'🇸🇬',tz:'Asia/Singapore',         lat:1.35,  lon:103.82},
+  {id:'bangkok',      region:'동남아시아',    name:'방콕',            en:'Bangkok',         country:'태국',          flag:'🇹🇭',tz:'Asia/Bangkok',           lat:13.75, lon:100.51},
+  {id:'phuket',       region:'동남아시아',    name:'푸켓',            en:'Phuket',          country:'태국',          flag:'🇹🇭',tz:'Asia/Bangkok',           lat:7.88,  lon:98.39},
+  {id:'manila',       region:'동남아시아',    name:'마닐라',          en:'Manila',          country:'필리핀',        flag:'🇵🇭',tz:'Asia/Manila',            lat:14.60, lon:120.98},
+  {id:'cebu',         region:'동남아시아',    name:'세부',            en:'Cebu',            country:'필리핀',        flag:'🇵🇭',tz:'Asia/Manila',            lat:10.32, lon:123.89},
+  {id:'jakarta',      region:'동남아시아',    name:'자카르타',        en:'Jakarta',         country:'인도네시아',    flag:'🇮🇩',tz:'Asia/Jakarta',           lat:-6.21, lon:106.85},
+  {id:'bali',         region:'동남아시아',    name:'발리',            en:'Bali',            country:'인도네시아',    flag:'🇮🇩',tz:'Asia/Makassar',          lat:-8.41, lon:115.19},
+  {id:'kualalumpur',  region:'동남아시아',    name:'쿠알라룸푸르',    en:'Kuala Lumpur',    country:'말레이시아',    flag:'🇲🇾',tz:'Asia/Kuala_Lumpur',      lat:3.14,  lon:101.69},
+  {id:'hanoi',        region:'동남아시아',    name:'하노이',          en:'Hanoi',           country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:21.03, lon:105.85},
+  {id:'hochiminh',    region:'동남아시아',    name:'호치민',          en:'Ho Chi Minh',     country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:10.82, lon:106.63},
+  {id:'danang',       region:'동남아시아',    name:'다낭',            en:'Da Nang',         country:'베트남',        flag:'🇻🇳',tz:'Asia/Ho_Chi_Minh',       lat:16.05, lon:108.20},
+  {id:'phnompenh',    region:'동남아시아',    name:'프놈펜',          en:'Phnom Penh',      country:'캄보디아',      flag:'🇰🇭',tz:'Asia/Phnom_Penh',        lat:11.56, lon:104.92},
+  {id:'yangon',       region:'동남아시아',    name:'양곤',            en:'Yangon',          country:'미얀마',        flag:'🇲🇲',tz:'Asia/Yangon',            lat:16.87, lon:96.20},
+  {id:'vientiane',    region:'동남아시아',    name:'비엔티안',        en:'Vientiane',       country:'라오스',        flag:'🇱🇦',tz:'Asia/Vientiane',         lat:17.97, lon:102.63},
+
+  // 남·중앙아시아 (12)
+  {id:'mumbai',       region:'남·중앙아시아', name:'뭄바이',          en:'Mumbai',          country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:19.08, lon:72.88},
+  {id:'delhi',        region:'남·중앙아시아', name:'뉴델리',          en:'New Delhi',       country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:28.61, lon:77.21},
+  {id:'bengaluru',    region:'남·중앙아시아', name:'벵갈루루',        en:'Bengaluru',       country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:12.97, lon:77.59},
+  {id:'kolkata',      region:'남·중앙아시아', name:'콜카타',          en:'Kolkata',         country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:22.57, lon:88.36},
+  {id:'chennai',      region:'남·중앙아시아', name:'첸나이',          en:'Chennai',         country:'인도',          flag:'🇮🇳',tz:'Asia/Kolkata',           lat:13.08, lon:80.27},
+  {id:'karachi',      region:'남·중앙아시아', name:'카라치',          en:'Karachi',         country:'파키스탄',      flag:'🇵🇰',tz:'Asia/Karachi',           lat:24.86, lon:67.01},
+  {id:'islamabad',    region:'남·중앙아시아', name:'이슬라마바드',    en:'Islamabad',       country:'파키스탄',      flag:'🇵🇰',tz:'Asia/Karachi',           lat:33.68, lon:73.05},
+  {id:'dhaka',        region:'남·중앙아시아', name:'다카',            en:'Dhaka',           country:'방글라데시',    flag:'🇧🇩',tz:'Asia/Dhaka',             lat:23.81, lon:90.41},
+  {id:'colombo',      region:'남·중앙아시아', name:'콜롬보',          en:'Colombo',         country:'스리랑카',      flag:'🇱🇰',tz:'Asia/Colombo',           lat:6.93,  lon:79.86},
+  {id:'kathmandu',    region:'남·중앙아시아', name:'카트만두',        en:'Kathmandu',       country:'네팔',          flag:'🇳🇵',tz:'Asia/Kathmandu',         lat:27.72, lon:85.32},
+  {id:'tashkent',     region:'남·중앙아시아', name:'타슈켄트',        en:'Tashkent',        country:'우즈베키스탄',  flag:'🇺🇿',tz:'Asia/Tashkent',          lat:41.30, lon:69.24},
+  {id:'almaty',       region:'남·중앙아시아', name:'알마티',          en:'Almaty',          country:'카자흐스탄',    flag:'🇰🇿',tz:'Asia/Almaty',            lat:43.26, lon:76.95},
+
+  // 중동 (12)
+  {id:'dubai',        region:'중동',          name:'두바이',          en:'Dubai',           country:'UAE',           flag:'🇦🇪',tz:'Asia/Dubai',             lat:25.20, lon:55.27},
+  {id:'abudhabi',     region:'중동',          name:'아부다비',        en:'Abu Dhabi',       country:'UAE',           flag:'🇦🇪',tz:'Asia/Dubai',             lat:24.45, lon:54.38},
+  {id:'riyadh',       region:'중동',          name:'리야드',          en:'Riyadh',          country:'사우디아라비아',flag:'🇸🇦',tz:'Asia/Riyadh',            lat:24.69, lon:46.72},
+  {id:'jeddah',       region:'중동',          name:'제다',            en:'Jeddah',          country:'사우디아라비아',flag:'🇸🇦',tz:'Asia/Riyadh',            lat:21.49, lon:39.19},
+  {id:'doha',         region:'중동',          name:'도하',            en:'Doha',            country:'카타르',        flag:'🇶🇦',tz:'Asia/Qatar',             lat:25.29, lon:51.53},
+  {id:'kuwait',       region:'중동',          name:'쿠웨이트시티',    en:'Kuwait City',     country:'쿠웨이트',      flag:'🇰🇼',tz:'Asia/Kuwait',            lat:29.38, lon:47.98},
+  {id:'muscat',       region:'중동',          name:'무스카트',        en:'Muscat',          country:'오만',          flag:'🇴🇲',tz:'Asia/Muscat',            lat:23.59, lon:58.41},
+  {id:'tel_aviv',     region:'중동',          name:'텔아비브',        en:'Tel Aviv',        country:'이스라엘',      flag:'🇮🇱',tz:'Asia/Jerusalem',         lat:32.07, lon:34.79},
+  {id:'amman',        region:'중동',          name:'암만',            en:'Amman',           country:'요르단',        flag:'🇯🇴',tz:'Asia/Amman',             lat:31.95, lon:35.91},
+  {id:'tehran',       region:'중동',          name:'테헤란',          en:'Tehran',          country:'이란',          flag:'🇮🇷',tz:'Asia/Tehran',            lat:35.69, lon:51.39},
+  {id:'baghdad',      region:'중동',          name:'바그다드',        en:'Baghdad',         country:'이라크',        flag:'🇮🇶',tz:'Asia/Baghdad',           lat:33.31, lon:44.37},
+  {id:'istanbul',     region:'중동',          name:'이스탄불',        en:'Istanbul',        country:'터키',          flag:'🇹🇷',tz:'Europe/Istanbul',        lat:41.01, lon:28.96},
+
+  // 유럽 (34)
+  {id:'london',       region:'유럽',          name:'런던',            en:'London',          country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:51.51, lon:-0.13},
+  {id:'edinburgh',    region:'유럽',          name:'에든버러',        en:'Edinburgh',       country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:55.95, lon:-3.19},
+  {id:'manchester',   region:'유럽',          name:'맨체스터',        en:'Manchester',      country:'영국',          flag:'🇬🇧',tz:'Europe/London',          lat:53.48, lon:-2.24},
+  {id:'dublin',       region:'유럽',          name:'더블린',          en:'Dublin',          country:'아일랜드',      flag:'🇮🇪',tz:'Europe/Dublin',          lat:53.33, lon:-6.25},
+  {id:'paris',        region:'유럽',          name:'파리',            en:'Paris',           country:'프랑스',        flag:'🇫🇷',tz:'Europe/Paris',           lat:48.85, lon:2.35},
+  {id:'lyon',         region:'유럽',          name:'리옹',            en:'Lyon',            country:'프랑스',        flag:'🇫🇷',tz:'Europe/Paris',           lat:45.76, lon:4.84},
+  {id:'berlin',       region:'유럽',          name:'베를린',          en:'Berlin',          country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:52.52, lon:13.41},
+  {id:'frankfurt',    region:'유럽',          name:'프랑크푸르트',    en:'Frankfurt',       country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:50.11, lon:8.68},
+  {id:'munich',       region:'유럽',          name:'뮌헨',            en:'Munich',          country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:48.14, lon:11.58},
+  {id:'hamburg',      region:'유럽',          name:'함부르크',        en:'Hamburg',         country:'독일',          flag:'🇩🇪',tz:'Europe/Berlin',          lat:53.55, lon:9.99},
+  {id:'madrid',       region:'유럽',          name:'마드리드',        en:'Madrid',          country:'스페인',        flag:'🇪🇸',tz:'Europe/Madrid',          lat:40.42, lon:-3.70},
+  {id:'barcelona',    region:'유럽',          name:'바르셀로나',      en:'Barcelona',       country:'스페인',        flag:'🇪🇸',tz:'Europe/Madrid',          lat:41.39, lon:2.17},
+  {id:'lisbon',       region:'유럽',          name:'리스본',          en:'Lisbon',          country:'포르투갈',      flag:'🇵🇹',tz:'Europe/Lisbon',          lat:38.72, lon:-9.14},
+  {id:'rome',         region:'유럽',          name:'로마',            en:'Rome',            country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:41.90, lon:12.50},
+  {id:'milan',        region:'유럽',          name:'밀라노',          en:'Milan',           country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:45.46, lon:9.19},
+  {id:'venice',       region:'유럽',          name:'베네치아',        en:'Venice',          country:'이탈리아',      flag:'🇮🇹',tz:'Europe/Rome',            lat:45.44, lon:12.32},
+  {id:'amsterdam',    region:'유럽',          name:'암스테르담',      en:'Amsterdam',       country:'네덜란드',      flag:'🇳🇱',tz:'Europe/Amsterdam',       lat:52.37, lon:4.90},
+  {id:'brussels',     region:'유럽',          name:'브뤼셀',          en:'Brussels',        country:'벨기에',        flag:'🇧🇪',tz:'Europe/Brussels',        lat:50.85, lon:4.35},
+  {id:'zurich',       region:'유럽',          name:'취리히',          en:'Zurich',          country:'스위스',        flag:'🇨🇭',tz:'Europe/Zurich',          lat:47.37, lon:8.54},
+  {id:'geneva',       region:'유럽',          name:'제네바',          en:'Geneva',          country:'스위스',        flag:'🇨🇭',tz:'Europe/Zurich',          lat:46.20, lon:6.14},
+  {id:'vienna',       region:'유럽',          name:'빈',              en:'Vienna',          country:'오스트리아',    flag:'🇦🇹',tz:'Europe/Vienna',          lat:48.21, lon:16.37},
+  {id:'prague',       region:'유럽',          name:'프라하',          en:'Prague',          country:'체코',          flag:'🇨🇿',tz:'Europe/Prague',          lat:50.08, lon:14.44},
+  {id:'warsaw',       region:'유럽',          name:'바르샤바',        en:'Warsaw',          country:'폴란드',        flag:'🇵🇱',tz:'Europe/Warsaw',          lat:52.23, lon:21.01},
+  {id:'budapest',     region:'유럽',          name:'부다페스트',      en:'Budapest',        country:'헝가리',        flag:'🇭🇺',tz:'Europe/Budapest',        lat:47.50, lon:19.04},
+  {id:'athens',       region:'유럽',          name:'아테네',          en:'Athens',          country:'그리스',        flag:'🇬🇷',tz:'Europe/Athens',          lat:37.98, lon:23.73},
+  {id:'stockholm',    region:'유럽',          name:'스톡홀름',        en:'Stockholm',       country:'스웨덴',        flag:'🇸🇪',tz:'Europe/Stockholm',       lat:59.33, lon:18.07},
+  {id:'oslo',         region:'유럽',          name:'오슬로',          en:'Oslo',            country:'노르웨이',      flag:'🇳🇴',tz:'Europe/Oslo',            lat:59.91, lon:10.75},
+  {id:'copenhagen',   region:'유럽',          name:'코펜하겐',        en:'Copenhagen',      country:'덴마크',        flag:'🇩🇰',tz:'Europe/Copenhagen',      lat:55.68, lon:12.57},
+  {id:'helsinki',     region:'유럽',          name:'헬싱키',          en:'Helsinki',        country:'핀란드',        flag:'🇫🇮',tz:'Europe/Helsinki',        lat:60.17, lon:24.94},
+  {id:'reykjavik',    region:'유럽',          name:'레이캬비크',      en:'Reykjavik',       country:'아이슬란드',    flag:'🇮🇸',tz:'Atlantic/Reykjavik',     lat:64.15, lon:-21.94},
+  {id:'moscow',       region:'유럽',          name:'모스크바',        en:'Moscow',          country:'러시아',        flag:'🇷🇺',tz:'Europe/Moscow',          lat:55.75, lon:37.62},
+  {id:'stpetersburg', region:'유럽',          name:'상트페테르부르크',en:'St. Petersburg',  country:'러시아',        flag:'🇷🇺',tz:'Europe/Moscow',          lat:59.93, lon:30.34},
+  {id:'kyiv',         region:'유럽',          name:'키이우',          en:'Kyiv',            country:'우크라이나',    flag:'🇺🇦',tz:'Europe/Kiev',            lat:50.45, lon:30.52},
+  {id:'bucharest',    region:'유럽',          name:'부쿠레슈티',      en:'Bucharest',       country:'루마니아',      flag:'🇷🇴',tz:'Europe/Bucharest',       lat:44.43, lon:26.10},
+
+  // 북미 (26)
+  {id:'newyork',      region:'북미',          name:'뉴욕',            en:'New York',        country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:40.71, lon:-74.01},
+  {id:'washington',   region:'북미',          name:'워싱턴 D.C.',     en:'Washington D.C.', country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:38.91, lon:-77.04},
+  {id:'boston',       region:'북미',          name:'보스턴',          en:'Boston',          country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:42.36, lon:-71.06},
+  {id:'atlanta',      region:'북미',          name:'애틀랜타',        en:'Atlanta',         country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:33.75, lon:-84.39},
+  {id:'miami',        region:'북미',          name:'마이애미',        en:'Miami',           country:'미국',          flag:'🇺🇸',tz:'America/New_York',       lat:25.78, lon:-80.21},
+  {id:'detroit',      region:'북미',          name:'디트로이트',      en:'Detroit',         country:'미국',          flag:'🇺🇸',tz:'America/Detroit',        lat:42.33, lon:-83.05},
+  {id:'chicago',      region:'북미',          name:'시카고',          en:'Chicago',         country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:41.88, lon:-87.63},
+  {id:'dallas',       region:'북미',          name:'댈러스',          en:'Dallas',          country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:32.78, lon:-96.80},
+  {id:'houston',      region:'북미',          name:'휴스턴',          en:'Houston',         country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:29.76, lon:-95.37},
+  {id:'austin',       region:'북미',          name:'오스틴',          en:'Austin',          country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:30.27, lon:-97.74},
+  {id:'minneapolis',  region:'북미',          name:'미니애폴리스',    en:'Minneapolis',     country:'미국',          flag:'🇺🇸',tz:'America/Chicago',        lat:44.98, lon:-93.27},
+  {id:'denver',       region:'북미',          name:'덴버',            en:'Denver',          country:'미국',          flag:'🇺🇸',tz:'America/Denver',         lat:39.74, lon:-104.98},
+  {id:'phoenix',      region:'북미',          name:'피닉스',          en:'Phoenix',         country:'미국',          flag:'🇺🇸',tz:'America/Phoenix',        lat:33.45, lon:-112.07},
+  {id:'lasvegas',     region:'북미',          name:'라스베이거스',    en:'Las Vegas',       country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:36.17, lon:-115.14},
+  {id:'losangeles',   region:'북미',          name:'로스앤젤레스',    en:'Los Angeles',     country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:34.05, lon:-118.24},
+  {id:'sanfran',      region:'북미',          name:'샌프란시스코',    en:'San Francisco',   country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:37.77, lon:-122.42},
+  {id:'sanjose',      region:'북미',          name:'산호세',          en:'San Jose',        country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:37.34, lon:-121.89},
+  {id:'seattle',      region:'북미',          name:'시애틀',          en:'Seattle',         country:'미국',          flag:'🇺🇸',tz:'America/Los_Angeles',    lat:47.61, lon:-122.33},
+  {id:'alaska',       region:'북미',          name:'앵커리지',        en:'Anchorage',       country:'미국(알래스카)',flag:'🇺🇸',tz:'America/Anchorage',      lat:61.22, lon:-149.90},
+  {id:'hawaii',       region:'북미',          name:'호놀룰루',        en:'Honolulu',        country:'하와이',        flag:'🌺', tz:'Pacific/Honolulu',       lat:21.31, lon:-157.86},
+  {id:'toronto',      region:'북미',          name:'토론토',          en:'Toronto',         country:'캐나다',        flag:'🇨🇦',tz:'America/Toronto',        lat:43.65, lon:-79.38},
+  {id:'montreal',     region:'북미',          name:'몬트리올',        en:'Montreal',        country:'캐나다',        flag:'🇨🇦',tz:'America/Toronto',        lat:45.50, lon:-73.57},
+  {id:'vancouver',    region:'북미',          name:'밴쿠버',          en:'Vancouver',       country:'캐나다',        flag:'🇨🇦',tz:'America/Vancouver',      lat:49.28, lon:-123.12},
+  {id:'calgary',      region:'북미',          name:'캘거리',          en:'Calgary',         country:'캐나다',        flag:'🇨🇦',tz:'America/Edmonton',       lat:51.04, lon:-114.07},
+  {id:'mexico',       region:'북미',          name:'멕시코시티',      en:'Mexico City',     country:'멕시코',        flag:'🇲🇽',tz:'America/Mexico_City',    lat:19.43, lon:-99.13},
+  {id:'monterrey',    region:'북미',          name:'몬테레이',        en:'Monterrey',       country:'멕시코',        flag:'🇲🇽',tz:'America/Monterrey',      lat:25.69, lon:-100.32},
+
+  // 중남미 (14)
+  {id:'saopaulo',     region:'중남미',        name:'상파울루',        en:'São Paulo',       country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-23.55,lon:-46.63},
+  {id:'rio',          region:'중남미',        name:'리우데자네이루',  en:'Rio de Janeiro',  country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-22.91,lon:-43.17},
+  {id:'brasilia',     region:'중남미',        name:'브라질리아',      en:'Brasília',        country:'브라질',        flag:'🇧🇷',tz:'America/Sao_Paulo',      lat:-15.79,lon:-47.88},
+  {id:'buenosaires',  region:'중남미',        name:'부에노스아이레스',en:'Buenos Aires',    country:'아르헨티나',    flag:'🇦🇷',tz:'America/Argentina/Buenos_Aires',lat:-34.60,lon:-58.38},
+  {id:'santiago',     region:'중남미',        name:'산티아고',        en:'Santiago',        country:'칠레',          flag:'🇨🇱',tz:'America/Santiago',       lat:-33.45,lon:-70.67},
+  {id:'bogota',       region:'중남미',        name:'보고타',          en:'Bogotá',          country:'콜롬비아',      flag:'🇨🇴',tz:'America/Bogota',         lat:4.71,  lon:-74.07},
+  {id:'lima',         region:'중남미',        name:'리마',            en:'Lima',            country:'페루',          flag:'🇵🇪',tz:'America/Lima',           lat:-12.05,lon:-77.05},
+  {id:'quito',        region:'중남미',        name:'키토',            en:'Quito',           country:'에콰도르',      flag:'🇪🇨',tz:'America/Guayaquil',      lat:-0.18, lon:-78.47},
+  {id:'caracas',      region:'중남미',        name:'카라카스',        en:'Caracas',         country:'베네수엘라',    flag:'🇻🇪',tz:'America/Caracas',        lat:10.48, lon:-66.90},
+  {id:'montevideo',   region:'중남미',        name:'몬테비데오',      en:'Montevideo',      country:'우루과이',      flag:'🇺🇾',tz:'America/Montevideo',     lat:-34.90,lon:-56.16},
+  {id:'panama',       region:'중남미',        name:'파나마시티',      en:'Panama City',     country:'파나마',        flag:'🇵🇦',tz:'America/Panama',         lat:8.98,  lon:-79.52},
+  {id:'sanjose_cr',   region:'중남미',        name:'산호세',          en:'San José',        country:'코스타리카',    flag:'🇨🇷',tz:'America/Costa_Rica',     lat:9.93,  lon:-84.09},
+  {id:'havana',       region:'중남미',        name:'아바나',          en:'Havana',          country:'쿠바',          flag:'🇨🇺',tz:'America/Havana',         lat:23.11, lon:-82.37},
+  {id:'santodomingo', region:'중남미',        name:'산토도밍고',      en:'Santo Domingo',   country:'도미니카공화국',flag:'🇩🇴',tz:'America/Santo_Domingo',  lat:18.49, lon:-69.93},
+
+  // 오세아니아 (10)
+  {id:'sydney',       region:'오세아니아',    name:'시드니',          en:'Sydney',          country:'호주',          flag:'🇦🇺',tz:'Australia/Sydney',       lat:-33.87,lon:151.21},
+  {id:'melbourne',    region:'오세아니아',    name:'멜버른',          en:'Melbourne',       country:'호주',          flag:'🇦🇺',tz:'Australia/Melbourne',    lat:-37.81,lon:144.96},
+  {id:'brisbane',     region:'오세아니아',    name:'브리즈번',        en:'Brisbane',        country:'호주',          flag:'🇦🇺',tz:'Australia/Brisbane',     lat:-27.47,lon:153.03},
+  {id:'perth',        region:'오세아니아',    name:'퍼스',            en:'Perth',           country:'호주',          flag:'🇦🇺',tz:'Australia/Perth',        lat:-31.95,lon:115.86},
+  {id:'adelaide',     region:'오세아니아',    name:'애들레이드',      en:'Adelaide',        country:'호주',          flag:'🇦🇺',tz:'Australia/Adelaide',     lat:-34.93,lon:138.60},
+  {id:'auckland',     region:'오세아니아',    name:'오클랜드',        en:'Auckland',        country:'뉴질랜드',      flag:'🇳🇿',tz:'Pacific/Auckland',       lat:-36.85,lon:174.76},
+  {id:'wellington',   region:'오세아니아',    name:'웰링턴',          en:'Wellington',      country:'뉴질랜드',      flag:'🇳🇿',tz:'Pacific/Auckland',       lat:-41.29,lon:174.78},
+  {id:'fiji',         region:'오세아니아',    name:'수바',            en:'Suva',            country:'피지',          flag:'🇫🇯',tz:'Pacific/Fiji',           lat:-18.14,lon:178.44},
+  {id:'guam',         region:'오세아니아',    name:'괌',              en:'Hagåtña',         country:'괌',            flag:'🇬🇺',tz:'Pacific/Guam',           lat:13.48, lon:144.75},
+  {id:'samoa',        region:'오세아니아',    name:'아피아',          en:'Apia',            country:'사모아',        flag:'🇼🇸',tz:'Pacific/Apia',           lat:-13.83,lon:-171.76},
+
+  // 아프리카 (12)
+  {id:'cairo',        region:'아프리카',      name:'카이로',          en:'Cairo',           country:'이집트',        flag:'🇪🇬',tz:'Africa/Cairo',           lat:30.04, lon:31.24},
+  {id:'casablanca',   region:'아프리카',      name:'카사블랑카',      en:'Casablanca',      country:'모로코',        flag:'🇲🇦',tz:'Africa/Casablanca',      lat:33.59, lon:-7.62},
+  {id:'algiers',      region:'아프리카',      name:'알제',            en:'Algiers',         country:'알제리',        flag:'🇩🇿',tz:'Africa/Algiers',         lat:36.75, lon:3.06},
+  {id:'tunis',        region:'아프리카',      name:'튀니스',          en:'Tunis',           country:'튀니지',        flag:'🇹🇳',tz:'Africa/Tunis',           lat:36.81, lon:10.18},
+  {id:'lagos',        region:'아프리카',      name:'라고스',          en:'Lagos',           country:'나이지리아',    flag:'🇳🇬',tz:'Africa/Lagos',           lat:6.46,  lon:3.38},
+  {id:'accra',        region:'아프리카',      name:'아크라',          en:'Accra',           country:'가나',          flag:'🇬🇭',tz:'Africa/Accra',           lat:5.60,  lon:-0.19},
+  {id:'nairobi',      region:'아프리카',      name:'나이로비',        en:'Nairobi',         country:'케냐',          flag:'🇰🇪',tz:'Africa/Nairobi',         lat:-1.29, lon:36.82},
+  {id:'addisababa',   region:'아프리카',      name:'아디스아바바',    en:'Addis Ababa',     country:'에티오피아',    flag:'🇪🇹',tz:'Africa/Addis_Ababa',     lat:9.03,  lon:38.74},
+  {id:'daressalaam',  region:'아프리카',      name:'다르에스살람',    en:'Dar es Salaam',   country:'탄자니아',      flag:'🇹🇿',tz:'Africa/Dar_es_Salaam',   lat:-6.79, lon:39.21},
+  {id:'johannesburg', region:'아프리카',      name:'요하네스버그',    en:'Johannesburg',    country:'남아프리카',    flag:'🇿🇦',tz:'Africa/Johannesburg',    lat:-26.20,lon:28.04},
+  {id:'capetown',     region:'아프리카',      name:'케이프타운',      en:'Cape Town',       country:'남아프리카',    flag:'🇿🇦',tz:'Africa/Johannesburg',    lat:-33.92,lon:18.42},
+  {id:'dakar',        region:'아프리카',      name:'다카르',          en:'Dakar',           country:'세네갈',        flag:'🇸🇳',tz:'Africa/Dakar',           lat:14.72, lon:-17.47},
+
+  // 표준시 (1)
+  {id:'utc',          region:'표준시',        name:'UTC',             en:'UTC',             country:'세계표준시',    flag:'🌐', tz:'UTC',                    lat:51.48, lon:0.00},
 ];
 
 /* ══════════════════════════════════
@@ -527,12 +682,15 @@ function getParts(tz){
   let h=parseInt(p.hour,10);if(h===24)h=0;
   const m=parseInt(p.minute,10),s=parseInt(p.second,10);
   const wd=new Intl.DateTimeFormat('ko-KR',{timeZone:tz,weekday:'short'}).format(now).replace('요일','');
+  const wdEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short'}).format(now);
+  const monEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,month:'short'}).format(now);
   const tzAbbr=fmt.formatToParts(now).find(x=>x.type==='timeZoneName')?.value||'';
   return{
     h,m,s,
     timeStr:`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     secStr:String(s).padStart(2,'0'),
     dateStr:`${p.month}-${p.day}(${wd})`,
+    dateStrEn:`${monEn} ${p.day} (${wdEn})`,
     tzAbbr
   };
 }
@@ -665,86 +823,26 @@ function tick(){
     if(r3)r3.textContent=`${p.dateStr} · ${p.tzAbbr}`;
   });
   applyTX('drift');
-  renderMap();
   bzUpdate();
   bzUpdate2();
+  updateWallClocks();
 }
 
 /* ══════════════════════════════════
    MAP  — D3 Natural Earth projection
 ══════════════════════════════════ */
-let mapProj = null;
 let mapTopo = null;
 
 async function initMap(){
-  const canvas = document.getElementById('mapCanvas');
-  const wrap   = canvas.parentElement;
-  // set canvas pixel size to match CSS size
-  canvas.width  = wrap.clientWidth  || 600;
-  canvas.height = wrap.clientHeight || 200;
-
   try {
     mapTopo = await d3.json(
       'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
     );
-    drawMapCanvas();
+    drawWallMap();
   } catch(e) {
-    // fallback: plain ocean background (map div already has bg colour)
     console.warn('Map data load failed', e);
+    renderWallClocks();
   }
-}
-
-function drawMapCanvas(){
-  const canvas = document.getElementById('mapCanvas');
-  const W = canvas.width, H = canvas.height;
-  const ctx = canvas.getContext('2d');
-
-  mapProj = d3.geoNaturalEarth1()
-    .fitExtent([[2, 2], [W-2, H-2]], {type:'Sphere'});
-
-  const path = d3.geoPath().projection(mapProj).context(ctx);
-
-  // ocean
-  ctx.fillStyle = '#b8d4ea';
-  ctx.beginPath(); path({type:'Sphere'}); ctx.fill();
-
-  // land
-  const countries = topojson.feature(mapTopo, mapTopo.objects.countries);
-  ctx.fillStyle   = '#d8ebcc';
-  ctx.strokeStyle = '#a8c4a0';
-  ctx.lineWidth   = 0.4;
-  ctx.beginPath(); path(countries); ctx.fill(); ctx.stroke();
-
-  // border outline
-  ctx.strokeStyle = '#7aabce';
-  ctx.lineWidth   = 0.8;
-  ctx.beginPath(); path({type:'Sphere'}); ctx.stroke();
-
-  renderMap();
-}
-
-function ll2p(lat, lon){
-  if(!mapProj) return {x:50, y:50};
-  const canvas = document.getElementById('mapCanvas');
-  const [px, py] = mapProj([lon, lat]);
-  return {
-    x: px / canvas.width  * 100,
-    y: py / canvas.height * 100
-  };
-}
-
-function renderMap(){
-  const el=document.getElementById('mapMarkers');if(!el)return;
-  el.innerHTML=cities.map(id=>{
-    const c=DB.find(x=>x.id===id);if(!c)return'';
-    const{x,y}=ll2p(c.lat,c.lon);
-    const p=getParts(c.tz);
-    return`<div class="mm" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%">
-      <div class="mdot"></div>
-      <div class="mlbl">${c.en}</div>
-      <div class="mtip">${c.flag} ${c.name} · ${p.timeStr}</div>
-    </div>`;
-  }).join('');
 }
 
 /* ══════════════════════════════════
@@ -752,9 +850,13 @@ function renderMap(){
 ══════════════════════════════════ */
 function onSlider(v){
   offsetMin=parseInt(v,10);
+  if(bzAnim){cancelAnimationFrame(bzAnim);bzAnim=null;}
+  if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
   applyTX('quick');
   updateLabels();
-  renderMap();
+  bzUpdate(true);
+  bzUpdate2(true);
+  updateWallClocks();
 }
 function updateLabels(){
   cities.forEach(id=>{
@@ -771,13 +873,12 @@ function updateLabels(){
 function resetToNow(){
   offsetMin=0;
   document.getElementById('slider').value=0;
-  bzManual=false;
-  bzManual2=false;
+  const targetDeg=bzUtcHours(Date.now())*15;
   applyTX('quick');
   updateLabels();
-  renderMap();
-  bzUpdate();
-  bzUpdate2();
+  bzAnimateTo(targetDeg);
+  bzAnimateTo2(((-targetDeg)%360+360)%360);
+  updateWallClocks();
 }
 
 /* ══════════════════════════════════
@@ -800,8 +901,13 @@ function dragMove(e){
   const dMin=-Math.round((x-drag.startX)/drag.w*24*60);
   offsetMin=Math.max(-1440,Math.min(1440,drag.startOff+dMin));
   document.getElementById('slider').value=offsetMin;
+  if(bzAnim){cancelAnimationFrame(bzAnim);bzAnim=null;}
+  if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
   applyTX('instant');
   updateLabels();
+  bzUpdate(true);
+  bzUpdate2(true);
+  updateWallClocks();
 }
 function dragEnd(){
   if(!drag)return;drag=null;
@@ -810,14 +916,13 @@ function dragEnd(){
   document.removeEventListener('mouseup',  dragEnd);
   document.removeEventListener('touchmove',dragMove);
   document.removeEventListener('touchend', dragEnd);
-  renderMap();
 }
 
 /* ══════════════════════════════════
    CITY MANAGE
 ══════════════════════════════════ */
-function removeCity(id){cities=cities.filter(c=>c!==id);saveCitiesToStorage();renderList();renderMap();buildBezelSVG();bzUpdate();}
-function addCity(id){if(!cities.includes(id))cities.push(id);saveCitiesToStorage();closeSearch();renderList();renderMap();buildBezelSVG();bzUpdate();}
+function removeCity(id){cities=cities.filter(c=>c!==id);saveCitiesToStorage();renderList();renderWallClocks();buildBezelSVG();bzUpdate(true);buildBezelSVG2();bzUpdate2(true);}
+function addCity(id){if(!cities.includes(id))cities.push(id);saveCitiesToStorage();closeSearch();renderList();renderWallClocks();buildBezelSVG();bzUpdate(true);buildBezelSVG2();bzUpdate2(true);}
 
 /* ══════════════════════════════════
    CARD DRAG-AND-DROP REORDER
@@ -865,7 +970,7 @@ function cardDrop(e, targetId){
 
   saveCitiesToStorage();
   renderList();
-  renderMap();
+  renderWallClocks();
 }
 
 function cardDragEnd(){
@@ -878,7 +983,14 @@ function cardDragEnd(){
 /* ══════════════════════════════════
    SEARCH
 ══════════════════════════════════ */
+let searchRegion='ALL';
+
+function setSearchRegion(reg){
+  searchRegion=reg;
+  renderSearch();
+}
 function openSearch(){
+  searchRegion='ALL';
   document.getElementById('overlay').classList.remove('hidden');
   const inp=document.getElementById('sinp');inp.value='';
   setTimeout(()=>inp.focus(),40);renderSearch();
@@ -888,19 +1000,60 @@ function bgClick(e){if(e.target===document.getElementById('overlay'))closeSearch
 function renderSearch(){
   const q=document.getElementById('sinp').value.trim().toLowerCase();
   const el=document.getElementById('sres');
-  const ms=DB.filter(c=>!cities.includes(c.id)&&(c.name.includes(q)||c.en.toLowerCase().includes(q)||c.country.includes(q))).slice(0,30);
-  if(!ms.length){el.innerHTML='<div class="sempty">검색 결과가 없습니다</div>';return;}
-  el.innerHTML=ms.map(c=>{
-    const p=getParts(c.tz);
-    return`<div class="sitem" onclick="addCity('${c.id}')">
-      <span class="sflag">${c.flag}</span>
-      <div class="sinf">
-        <div class="sname">${c.name} <span style="font-size:10px;color:var(--dim)">${c.en}</span></div>
-        <div class="scountry">${c.country}</div>
-      </div>
-      <span class="stime">${p.timeStr}</span>
-    </div>`;
-  }).join('');
+  const bar=document.getElementById('sregbar');
+  const matchedAll=DB.filter(c=>!cities.includes(c.id)&&(
+    !q||
+    c.name.toLowerCase().includes(q)||
+    c.en.toLowerCase().includes(q)||
+    c.country.toLowerCase().includes(q)||
+    c.region.toLowerCase().includes(q)
+  ));
+
+  const regCounts=new Map();
+  REGIONS.forEach(r=>regCounts.set(r,0));
+  matchedAll.forEach(c=>regCounts.set(c.region,(regCounts.get(c.region)||0)+1));
+
+  if(searchRegion!=='ALL'&&(regCounts.get(searchRegion)||0)===0){
+    searchRegion='ALL';
+  }
+
+  if(bar){
+    let btns=`<button class="sregbtn${searchRegion==='ALL'?' active':''}" onclick="setSearchRegion('ALL')">전체 (${matchedAll.length})</button>`;
+    REGIONS.forEach(r=>{
+      const cnt=regCounts.get(r)||0;
+      if(!cnt)return;
+      btns+=`<button class="sregbtn${searchRegion===r?' active':''}" onclick="setSearchRegion('${r}')">${r} (${cnt})</button>`;
+    });
+    bar.innerHTML=btns;
+  }
+
+  const visible=searchRegion==='ALL'?matchedAll:matchedAll.filter(c=>c.region===searchRegion);
+  if(!visible.length){el.innerHTML='<div class="sempty">검색 결과가 없습니다</div>';return;}
+
+  const groups=new Map();
+  REGIONS.forEach(r=>groups.set(r,[]));
+  visible.forEach(c=>{
+    if(!groups.has(c.region))groups.set(c.region,[]);
+    groups.get(c.region).push(c);
+  });
+
+  let html='';
+  groups.forEach((items,reg)=>{
+    if(!items.length)return;
+    html+=`<div class="sgrp"><span>${reg}</span><span class="sgrpcnt">${items.length}</span></div>`;
+    html+=items.map(c=>{
+      const p=getParts(c.tz);
+      return`<div class="sitem" onclick="addCity('${c.id}')">
+        <span class="sflag">${c.flag}</span>
+        <div class="sinf">
+          <div class="sname">${c.name} <span style="font-size:10px;color:var(--dim)">${c.en}</span></div>
+          <div class="scountry">${c.country}</div>
+        </div>
+        <span class="stime">${p.timeStr}</span>
+      </div>`;
+    }).join('');
+  });
+  el.innerHTML=html;
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();});
 
@@ -908,51 +1061,85 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();});
    BEZEL WORLD TIMER
 ══════════════════════════════════ */
 const BZ_CITIES=[
-  {offset:-11,name:'Samoa'},
-  {offset:-10,name:'Honolulu'},
-  {offset:-9, name:'Anchorage'},
-  {offset:-8, name:'L.A.'},
-  {offset:-7, name:'Denver'},
-  {offset:-6, name:'Chicago'},
-  {offset:-5, name:'New York'},
-  {offset:-4, name:'Caracas'},
-  {offset:-3, name:'São Paulo'},
-  {offset:-2, name:'Noronha'},
-  {offset:-1, name:'Azores'},
-  {offset: 0, name:'London'},
-  {offset: 1, name:'Paris'},
-  {offset: 2, name:'Cairo'},
-  {offset: 3, name:'Moscow'},
-  {offset: 4, name:'Dubai'},
-  {offset: 5, name:'Karachi'},
-  {offset: 6, name:'Dhaka'},
-  {offset: 7, name:'Bangkok'},
-  {offset: 8, name:'Beijing'},
-  {offset: 9, name:'Seoul'},
-  {offset:10, name:'Sydney'},
-  {offset:11, name:'Noumea'},
-  {offset:12, name:'Auckland'},
+  {tz:'Pacific/Pago_Pago',   name:'Samoa'},
+  {tz:'Pacific/Honolulu',    name:'Honolulu'},
+  {tz:'America/Anchorage',   name:'Anchorage'},
+  {tz:'America/Los_Angeles', name:'L.A.'},
+  {tz:'America/Denver',      name:'Denver'},
+  {tz:'America/Chicago',     name:'Chicago'},
+  {tz:'America/New_York',    name:'New York'},
+  {tz:'America/Caracas',     name:'Caracas'},
+  {tz:'America/Sao_Paulo',   name:'São Paulo'},
+  {tz:'America/Noronha',     name:'Noronha'},
+  {tz:'Atlantic/Azores',     name:'Azores'},
+  {tz:'Europe/London',       name:'London'},
+  {tz:'Europe/Paris',        name:'Paris'},
+  {tz:'Africa/Cairo',        name:'Cairo'},
+  {tz:'Europe/Moscow',       name:'Moscow'},
+  {tz:'Asia/Dubai',          name:'Dubai'},
+  {tz:'Asia/Karachi',        name:'Karachi'},
+  {tz:'Asia/Dhaka',          name:'Dhaka'},
+  {tz:'Asia/Bangkok',        name:'Bangkok'},
+  {tz:'Asia/Shanghai',       name:'Beijing'},
+  {tz:'Asia/Seoul',          name:'Seoul'},
+  {tz:'Australia/Sydney',    name:'Sydney'},
+  {tz:'Pacific/Noumea',      name:'Noumea'},
+  {tz:'Pacific/Auckland',    name:'Auckland'},
 ];
+const BZ_FALLBACK={'-9':'Gambier','-1':'C. Verde','0':'UTC','1':'Lagos','10':'Brisbane','12':'Fiji'};
 
 let bzDeg=0;
+let bzRenderedDeg=null;
 let bzDragSt=null;
-let bzManual=false;
+let bzAnim=null;
 let bzDeg2=0;
+let bzRenderedDeg2=null;
 let bzDragSt2=null;
-let bzManual2=false;
+let bzAnim2=null;
 
-/* city UTC integer offset (rounds to nearest hour) */
-function bzCityOffset(tzId){
-  const c=DB.find(x=>x.id===tzId);if(!c)return null;
-  const now=Date.now();
-  const nowD=new Date(now);
-  const utcMin=nowD.getUTCHours()*60+nowD.getUTCMinutes();
-  const lh=localHourAt(now,c.tz);
-  const lm=parseInt(new Intl.DateTimeFormat('en-US',{timeZone:c.tz,minute:'2-digit'}).format(nowD),10);
-  let off=(lh*60+lm)-utcMin;
-  if(off>=12*60)off-=24*60;
-  if(off<=-12*60)off+=24*60;
-  return Math.round(off/60);
+function tzOffsetMin(ts,tz){
+  const fmt=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit'
+  });
+  const p={};
+  fmt.formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);
+  let h=parseInt(p.hour,10);if(h===24)h=0;
+  const localUtc=Date.UTC(+p.year,+p.month-1,+p.day,h,+p.minute);
+  return Math.round((localUtc-ts)/60000);
+}
+
+function bzLiveOffset(tz,ts=selTime()){
+  let off=Math.round(tzOffsetMin(ts,tz)/60);
+  if(off>12)off-=24;
+  if(off<=-12)off+=24;
+  return off;
+}
+
+function getBezelSlots(ts=selTime()){
+  const map=new Map();
+  cities.forEach(id=>{
+    const c=DB.find(x=>x.id===id);if(!c)return;
+    const off=bzLiveOffset(c.tz,ts);
+    if(!map.has(off))map.set(off,{offset:off,name:c.en,sel:true});
+  });
+  BZ_CITIES.forEach(d=>{
+    const off=bzLiveOffset(d.tz,ts);
+    if(!map.has(off))map.set(off,{offset:off,name:d.name,sel:false});
+  });
+  for(let off=-11;off<=12;off++){
+    if(!map.has(off)){
+      const fb=BZ_FALLBACK[String(off)]||(off>=0?`UTC+${off}`:`UTC${off}`);
+      map.set(off,{offset:off,name:fb,sel:false});
+    }
+  }
+  return Array.from(map.values()).sort((a,b)=>a.offset-b.offset);
+}
+
+function bzUtcHours(ts=selTime()){
+  const d=new Date(ts);
+  return d.getUTCHours()+d.getUTCMinutes()/60+d.getUTCSeconds()/3600;
 }
 
 /* polar → SVG xy (0° = top/north, clockwise positive) */
@@ -961,131 +1148,153 @@ function bzPt(angleDeg,r){
   return{x:Math.cos(rad)*r,y:Math.sin(rad)*r};
 }
 
-function buildBezelSVG(){
-  const svg=document.getElementById('bzSVG');if(!svg)return;
+function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
+  const RC=256,RBO=243,RBI=195,RCL=219;
+  const RFC=188,RSO=188,RNM=164;
+  const slots=getBezelSlots(selTime());
 
-  /* radii */
-  const RC=255, RBO=242, RBI=196, RFC=183;
-  const RSO=192, RSI=183, RNM=172, RCL=218;
+  let h=`<defs>
+    <linearGradient id="${idPrefix}-steel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eef3f8"/>
+      <stop offset="26%" stop-color="#9aa8b8"/>
+      <stop offset="52%" stop-color="#f6f9fc"/>
+      <stop offset="78%" stop-color="#6e7e90"/>
+      <stop offset="100%" stop-color="#d2dce6"/>
+    </linearGradient>
+    <radialGradient id="${idPrefix}-ring" cx="50%" cy="50%" r="50%">
+      <stop offset="72%" stop-color="#364d6d"/>
+      <stop offset="100%" stop-color="#24354c"/>
+    </radialGradient>
+    <radialGradient id="${idPrefix}-face" cx="45%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="62%" stop-color="#e8f1fa"/>
+      <stop offset="100%" stop-color="#d4e4f3"/>
+    </radialGradient>
+    <linearGradient id="${idPrefix}-glass" x1="12%" y1="5%" x2="72%" y2="85%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.28)"/>
+      <stop offset="55%" stop-color="rgba(255,255,255,0.08)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>`;
 
-  /* selected city UTC offsets */
-  const selOffsets=new Set(cities.map(bzCityOffset).filter(v=>v!==null));
+  /* outer brushed steel case + 72 coin-edge knurled notches */
+  h+=`<circle r="${RC}" fill="url(#${idPrefix}-steel)" stroke="#627284" stroke-width="1.5"/>`;
+  h+=`<circle r="248" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>`;
+  for(let i=0;i<72;i++){
+    const a=i*5;
+    const n1=bzPt(a,244),n2=bzPt(a,252);
+    h+=`<line x1="${n1.x.toFixed(2)}" y1="${n1.y.toFixed(2)}" x2="${n2.x.toFixed(2)}" y2="${n2.y.toFixed(2)}" stroke="${i%2?'rgba(255,255,255,.38)':'rgba(25,40,60,.28)'}" stroke-width="1.1"/>`;
+  }
 
-  let h='';
+  /* city ring bezel */
+  h+=`<g id="${bezelId}">`;
+  h+=`<circle r="${RBO}" fill="url(#${idPrefix}-ring)" stroke="#5c789a" stroke-width="1.4"/>`;
+  h+=`<circle r="${RBI}" fill="#1b2a3d" stroke="url(#${idPrefix}-steel)" stroke-width="1.6"/>`;
 
-  /* outer case */
-  h+=`<circle r="${RC}" fill="#1a2535" stroke="#0d1520" stroke-width="4"/>`;
-  h+=`<circle r="${RC-2}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>`;
-
-  /* ─── BEZEL GROUP (rotates) ─── */
-  h+=`<g id="bzBezel">`;
-  h+=`<circle r="${RBO}" fill="#243050" stroke="#3d5478" stroke-width="1.5"/>`;
-  h+=`<circle r="${RBI}" fill="#1a2535"/>`;
-
-  BZ_CITIES.forEach(c=>{
+  slots.forEach(c=>{
     const ang=c.offset*15;
     const p=bzPt(ang,RCL);
-    const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+11);
-    const sel=selOffsets.has(c.offset);
-    const fc=sel?'#ffcc66':'#8aadd4';
-    const sw=sel?1.8:1.2;
+    const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+9);
+    const sel=c.sel;
+    const fc=sel?'#ffd452':'#e8f2fc';
+    const tc=sel?'#ffd452':'#9cb9d6';
+    const sw=sel?2:1.2;
+    const fs=c.name.length>11?9.5:(sel?11:10.5);
 
-    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${fc}" stroke-width="${sw}"/>`;
-    h+=`<text class="bzcl" data-offset="${c.offset}"
+    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${tc}" stroke-width="${sw}"/>`;
+    h+=`<text class="${cityCls}" data-offset="${c.offset}"
       x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
       text-anchor="middle" dominant-baseline="middle"
-      font-size="10" font-weight="${sel?'700':'500'}"
+      font-size="${fs}" font-weight="${sel?'700':'600'}"
       font-family="Arial,sans-serif" fill="${fc}"
       transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})">${c.name}</text>`;
   });
-  h+=`</g>`; /* end bzBezel */
+  h+=`</g>`;
 
-  /* ─── fixed 24h scale ─── */
-  h+=`<circle r="${RFC}" fill="#dce8f4" stroke="#b8cfe4" stroke-width="1.5"/>`;
+  /* two-tone day/night 24h dial (06-17 day, 18-05 night) */
+  const pDay=bzPt(82.5,RFC),pNit=bzPt(262.5,RFC);
+  if(dialId)h+=`<g id="${dialId}">`;
+  h+=`<path d="M 0,0 L ${pDay.x.toFixed(2)},${pDay.y.toFixed(2)} A ${RFC},${RFC} 0 0,1 ${pNit.x.toFixed(2)},${pNit.y.toFixed(2)} Z" fill="#eef6fd"/>`;
+  h+=`<path d="M 0,0 L ${pNit.x.toFixed(2)},${pNit.y.toFixed(2)} A ${RFC},${RFC} 0 0,1 ${pDay.x.toFixed(2)},${pDay.y.toFixed(2)} Z" fill="#4c6b92"/>`;
+  h+=`<circle r="${RFC}" fill="none" stroke="url(#${idPrefix}-steel)" stroke-width="2"/>`;
 
   for(let hr=0;hr<24;hr++){
     const ang=hr*15;
-    const maj=hr%6===0, mid=hr===0||hr===12;
-    const tO=bzPt(ang,RSO+(maj?5:0)),tI=bzPt(ang,RSI);
-    const sc=mid?'#1a3a58':maj?'#2a5280':'#8ab0d0';
-    const tsw=mid?2.5:maj?1.8:1;
+    const isDay=hr>=6&&hr<18;
+    const maj=hr%6===0,mid=hr===0||hr===12;
+    const tO=bzPt(ang,RSO),tI=bzPt(ang,maj?178:181);
+    const sc=isDay?(mid?'#133454':maj?'#24507a':'#7da8cc'):(mid?'#ffffff':maj?'#e6f2ff':'rgba(225,240,255,.55)');
+    const tsw=mid?2.4:maj?1.8:1;
     h+=`<line x1="${tO.x.toFixed(2)}" y1="${tO.y.toFixed(2)}" x2="${tI.x.toFixed(2)}" y2="${tI.y.toFixed(2)}" stroke="${sc}" stroke-width="${tsw}"/>`;
     const np=bzPt(ang,RNM);
-    h+=`<text x="${np.x.toFixed(2)}" y="${np.y.toFixed(2)}"
+    h+=`<text${tickCls?` class="${tickCls}"`:''} x="${np.x.toFixed(2)}" y="${np.y.toFixed(2)}"
       text-anchor="middle" dominant-baseline="middle"
-      font-size="${maj?14:9}" font-weight="${maj?'700':'400'}"
+      font-size="${maj?17:13}" font-weight="${maj?'800':'600'}"
       font-family="Arial,sans-serif"
-      fill="${maj?'#1a3a58':'#5a8aaa'}">${String(hr).padStart(2,'0')}</text>`;
+      fill="${isDay?'#133454':'#f4f8ff'}">${String(hr).padStart(2,'0')}</text>`;
+  }
+  if(dialId)h+=`</g>`;
+
+  /* inner stepped chapter ring + sunburst center dial + 12 baton markers */
+  h+=`<circle r="141" fill="none" stroke="url(#${idPrefix}-steel)" stroke-width="4"/>`;
+  h+=`<circle r="139" fill="none" stroke="rgba(19,32,48,.18)" stroke-width="1"/>`;
+  h+=`<circle r="137" fill="url(#${idPrefix}-face)"/>`;
+  h+=`<circle r="129" fill="none" stroke="rgba(21,53,82,.09)" stroke-width="0.7"/>`;
+  h+=`<circle r="117" fill="none" stroke="rgba(21,53,82,.06)" stroke-width="0.7"/>`;
+
+  for(let h12=0;h12<12;h12++){
+    const a=h12*30;
+    const b1=bzPt(a,123),b2=bzPt(a,133);
+    h+=`<line x1="${b1.x.toFixed(2)}" y1="${b1.y.toFixed(2)}" x2="${b2.x.toFixed(2)}" y2="${b2.y.toFixed(2)}" stroke="${h12%3===0?'#3a5470':'#7d96b0'}" stroke-width="${h12%3===0?'2.4':'1.4'}" stroke-linecap="round"/>`;
   }
 
-  /* inner face layers */
-  h+=`<circle r="158" fill="#ccdff0" stroke="#a8c8e0" stroke-width="1"/>`;
-  h+=`<circle r="126" fill="#edf4fb" stroke="#c0d8ec" stroke-width="1"/>`;
+  /* recessed center time readout + subtle sapphire glass sheen */
+  h+=`<rect x="-78" y="-36" width="156" height="90" rx="14" fill="rgba(255,255,255,.72)" stroke="#c2d8ec" stroke-width="1"/>`;
+  h+=`<text x="0" y="-19" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#4b7396" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
+  h+=`<text id="${lblId}" x="0" y="12" text-anchor="middle" dominant-baseline="middle" font-size="26" font-weight="700" fill="#153552" font-family="Arial,sans-serif" letter-spacing="1.5" style="font-variant-numeric:tabular-nums">00:00:00</text>`;
+  h+=`<text x="0" y="39" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6a8eae" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
+  h+=`<path d="M -115,-72 A 136,136 0 0,1 85,-106 C 32,-56 -45,-34 -115,-72 Z" fill="url(#${idPrefix}-glass)" opacity="0.45" pointer-events="none"/>`;
 
+  return h;
+}
 
-  /* center — Seoul time from bezel */
-  h+=`<text x="0" y="-20" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#5a80a0" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
-  h+=`<text id="bzSeoulLbl" x="0" y="14" text-anchor="middle" dominant-baseline="middle" font-size="30" font-weight="700" fill="#1a3a58" font-family="Arial,sans-serif" letter-spacing="2">00:00</text>`;
-  h+=`<text x="0" y="40" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#7a9ab8" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
-
-  svg.innerHTML=h;
-  bzApplyDeg(bzDeg);
+function buildBezelSVG(){
+  const svg=document.getElementById('bzSVG');if(!svg)return;
+  svg.innerHTML=bzWatchMarkup('bz1','bzBezel','bzcl','','','bzSeoulLbl');
+  bzApplyDeg(bzDeg,true);
 }
 
 function buildBezelSVG2(){
   const svg=document.getElementById('bzSVG2');if(!svg)return;
-  const RC=255,RBO=242,RBI=196,RFC=183;
-  const RSO=192,RSI=183,RNM=172,RCL=218;
-  const selOffsets=new Set(cities.map(bzCityOffset).filter(v=>v!==null));
-  let h='';
-  h+=`<circle r="${RC}" fill="#1a2535" stroke="#0d1520" stroke-width="4"/>`;
-  h+=`<circle r="${RC-2}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>`;
-  h+=`<g id="bzBezel2">`;
-  h+=`<circle r="${RBO}" fill="#243050" stroke="#3d5478" stroke-width="1.5"/>`;
-  h+=`<circle r="${RBI}" fill="#1a2535"/>`;
-  BZ_CITIES.forEach(c=>{
-    const ang=c.offset*15;
-    const p=bzPt(ang,RCL);
-    const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+11);
-    const sel=selOffsets.has(c.offset);
-    const fc=sel?'#ffcc66':'#8aadd4';
-    const sw=sel?1.8:1.2;
-    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${fc}" stroke-width="${sw}"/>`;
-    h+=`<text class="bzcl2" data-offset="${c.offset}" x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="${sel?'700':'500'}" font-family="Arial,sans-serif" fill="${fc}">${c.name}</text>`;
-  });
-  h+=`</g>`;
-  h+=`<g id="bzDial2">`;
-  h+=`<circle r="${RFC}" fill="#dce8f4" stroke="#b8cfe4" stroke-width="1.5"/>`;
-  for(let hr=0;hr<24;hr++){
-    const ang=hr*15;
-    const maj=hr%6===0,mid=hr===0||hr===12;
-    const tO=bzPt(ang,RSO+(maj?5:0)),tI=bzPt(ang,RSI);
-    const sc=mid?'#1a3a58':maj?'#2a5280':'#8ab0d0';
-    const tsw=mid?2.5:maj?1.8:1;
-    h+=`<line x1="${tO.x.toFixed(2)}" y1="${tO.y.toFixed(2)}" x2="${tI.x.toFixed(2)}" y2="${tI.y.toFixed(2)}" stroke="${sc}" stroke-width="${tsw}"/>`;
-    const np=bzPt(ang,RNM);
-    h+=`<text class="bztick2" x="${np.x.toFixed(2)}" y="${np.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" font-size="${maj?14:9}" font-weight="${maj?'700':'400'}" font-family="Arial,sans-serif" fill="${maj?'#1a3a58':'#5a8aaa'}">${String(hr).padStart(2,'0')}</text>`;
-  }
-  h+=`</g>`;
-  h+=`<circle r="158" fill="#ccdff0" stroke="#a8c8e0" stroke-width="1"/>`;
-  h+=`<circle r="126" fill="#edf4fb" stroke="#c0d8ec" stroke-width="1"/>`;
-  h+=`<text x="0" y="-20" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#5a80a0" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
-  h+=`<text id="bzSeoulLbl2" x="0" y="14" text-anchor="middle" dominant-baseline="middle" font-size="30" font-weight="700" fill="#1a3a58" font-family="Arial,sans-serif" letter-spacing="2">00:00</text>`;
-  h+=`<text x="0" y="40" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#7a9ab8" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
-  svg.innerHTML=h;
-  bzApplyDeg2(bzDeg2);
+  svg.innerHTML=bzWatchMarkup('bz2','bzBezel2','bzcl2','bzDial2','bztick2','bzSeoulLbl2');
+  bzApplyDeg2(bzDeg2,true);
 }
 
 function bzSeoulFromDeg(deg){
   /* Seoul (UTC+9) label on bezel points to inner scale hour = (9 + deg/15) mod 24 */
-  const h=((9+deg/15)%24+24)%24;
-  const hh=Math.floor(h);
-  const mm=Math.floor((h%1)*60);
-  return`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  const totalSec=Math.round((((9+deg/15)%24+24)%24)*3600)%86400;
+  const hh=Math.floor(totalSec/3600);
+  const mm=Math.floor((totalSec%3600)/60);
+  const ss=totalSec%60;
+  return`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
 }
 
-function bzApplyDeg(deg){
+function bzSeoulFromDeg2(deg){
+  /* Fixed Seoul (UTC+9) aligns with rotated dial hour = (9 - deg/15) mod 24 */
+  const totalSec=Math.round((((9-deg/15)%24+24)%24)*3600)%86400;
+  const hh=Math.floor(totalSec/3600);
+  const mm=Math.floor((totalSec%3600)/60);
+  const ss=totalSec%60;
+  return`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+function bzApplyDeg(deg,force=false){
   bzDeg=((deg%360)+360)%360;
+  /* update center Seoul display */
+  const sl=document.getElementById('bzSeoulLbl');
+  if(sl)sl.textContent=bzSeoulFromDeg(bzDeg);
+  const diff=bzRenderedDeg===null?Infinity:Math.abs(bzDeg-bzRenderedDeg);
+  if(!force&&Math.min(diff,360-diff)<0.1)return;
   const bezel=document.getElementById('bzBezel');if(!bezel)return;
   bezel.setAttribute('transform',`rotate(${bzDeg.toFixed(3)})`);
   /* counter-rotate labels so text stays horizontal */
@@ -1094,13 +1303,15 @@ function bzApplyDeg(deg){
     const cy=parseFloat(lbl.getAttribute('y'));
     lbl.setAttribute('transform',`rotate(${(-bzDeg).toFixed(3)},${cx},${cy})`);
   });
-  /* update center Seoul display */
-  const sl=document.getElementById('bzSeoulLbl');
-  if(sl)sl.textContent=bzSeoulFromDeg(bzDeg);
+  bzRenderedDeg=bzDeg;
 }
 
-function bzApplyDeg2(deg){
+function bzApplyDeg2(deg,force=false){
   bzDeg2=((deg%360)+360)%360;
+  const sl=document.getElementById('bzSeoulLbl2');
+  if(sl)sl.textContent=bzSeoulFromDeg2(bzDeg2);
+  const diff=bzRenderedDeg2===null?Infinity:Math.abs(bzDeg2-bzRenderedDeg2);
+  if(!force&&Math.min(diff,360-diff)<0.1)return;
   const dial=document.getElementById('bzDial2');if(!dial)return;
   dial.setAttribute('transform',`rotate(${bzDeg2.toFixed(3)})`);
   document.querySelectorAll('.bztick2').forEach(lbl=>{
@@ -1108,8 +1319,7 @@ function bzApplyDeg2(deg){
     const cy=parseFloat(lbl.getAttribute('y'));
     lbl.setAttribute('transform',`rotate(${(-bzDeg2).toFixed(3)},${cx},${cy})`);
   });
-  const sl=document.getElementById('bzSeoulLbl2');
-  if(sl)sl.textContent=bzSeoulFromDeg(bzDeg2);
+  bzRenderedDeg2=bzDeg2;
 }
 
 function bzGetAngle(e,svg){
@@ -1119,26 +1329,56 @@ function bzGetAngle(e,svg){
   return Math.atan2(pt.clientY-cy,pt.clientX-cx)*180/Math.PI;
 }
 
-function bzUpdate(){
-  if(bzDragSt||bzManual)return;
-  const now=new Date();
-  const utcH=now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
-  bzApplyDeg(utcH*15);
+function bzUpdate(force=false){
+  if(bzDragSt||bzAnim)return;
+  const utcH=bzUtcHours(selTime());
+  bzApplyDeg(utcH*15,force);
 }
 
-function bzUpdate2(){
-  if(bzDragSt2||bzManual2)return;
-  const now=new Date();
-  const utcH=now.getUTCHours()+now.getUTCMinutes()/60+now.getUTCSeconds()/3600;
-  bzApplyDeg2(utcH*15);
+function bzUpdate2(force=false){
+  if(bzDragSt2||bzAnim2)return;
+  const utcH=bzUtcHours(selTime());
+  bzApplyDeg2(-utcH*15,force);
+}
+
+function bzAnimateTo(targetDeg,duration=1000){
+  if(bzAnim){cancelAnimationFrame(bzAnim);bzAnim=null;}
+  const startDeg=bzDeg;
+  const delta=((targetDeg-startDeg+540)%360)-180;
+  if(Math.abs(delta)<0.5){bzApplyDeg(targetDeg,true);return;}
+  const t0=performance.now();
+  function step(now){
+    const t=Math.min(1,(now-t0)/duration);
+    const ease=1-Math.pow(1-t,3);
+    bzApplyDeg(startDeg+delta*ease,true);
+    if(t<1){bzAnim=requestAnimationFrame(step);}
+    else{bzAnim=null;bzUpdate(true);}
+  }
+  bzAnim=requestAnimationFrame(step);
+}
+
+function bzAnimateTo2(targetDeg,duration=1000){
+  if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
+  const startDeg=bzDeg2;
+  const delta=((targetDeg-startDeg+540)%360)-180;
+  if(Math.abs(delta)<0.5){bzApplyDeg2(targetDeg,true);return;}
+  const t0=performance.now();
+  function step(now){
+    const t=Math.min(1,(now-t0)/duration);
+    const ease=1-Math.pow(1-t,3);
+    bzApplyDeg2(startDeg+delta*ease,true);
+    if(t<1){bzAnim2=requestAnimationFrame(step);}
+    else{bzAnim2=null;bzUpdate2(true);}
+  }
+  bzAnim2=requestAnimationFrame(step);
 }
 
 function bzDragStart(e){
   e.preventDefault();
+  if(bzAnim){cancelAnimationFrame(bzAnim);bzAnim=null;}
+  if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
   const svg=document.getElementById('bzSVG');
-  const bezel=document.getElementById('bzBezel');
-  if(bezel)bezel.classList.add('nodrift');
-  bzDragSt={startA:bzGetAngle(e,svg),startDeg:bzDeg};
+  bzDragSt={prevA:bzGetAngle(e,svg),accDeg:0,startOff:offsetMin};
   document.addEventListener('mousemove',bzDragMove);
   document.addEventListener('mouseup',bzDragEnd);
   document.addEventListener('touchmove',bzDragMove,{passive:false});
@@ -1147,14 +1387,22 @@ function bzDragStart(e){
 function bzDragMove(e){
   if(!bzDragSt)return;e.preventDefault();
   const svg=document.getElementById('bzSVG');
-  const delta=bzGetAngle(e,svg)-bzDragSt.startA;
-  bzApplyDeg(bzDragSt.startDeg+delta);
+  const curA=bzGetAngle(e,svg);
+  const step=((curA-bzDragSt.prevA+540)%360)-180;
+  bzDragSt.accDeg+=step;
+  bzDragSt.prevA=curA;
+  offsetMin=Math.max(-1440,Math.min(1440,bzDragSt.startOff+Math.round(bzDragSt.accDeg*4)));
+  document.getElementById('slider').value=offsetMin;
+  applyTX('instant');
+  updateLabels();
+  updateWallClocks();
+  const utcH=bzUtcHours(selTime());
+  bzApplyDeg(utcH*15,true);
+  bzApplyDeg2(-utcH*15,true);
 }
 function bzDragEnd(){
   bzDragSt=null;
-  bzManual=true;
-  const bezel=document.getElementById('bzBezel');
-  if(bezel)bezel.classList.remove('nodrift');
+  document.querySelectorAll('.tape').forEach(t=>{t.classList.remove('instant');t.classList.add('drift');});
   document.removeEventListener('mousemove',bzDragMove);
   document.removeEventListener('mouseup',bzDragEnd);
   document.removeEventListener('touchmove',bzDragMove);
@@ -1163,10 +1411,10 @@ function bzDragEnd(){
 
 function bzDragStart2(e){
   e.preventDefault();
+  if(bzAnim){cancelAnimationFrame(bzAnim);bzAnim=null;}
+  if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
   const svg=document.getElementById('bzSVG2');
-  const dial=document.getElementById('bzDial2');
-  if(dial)dial.classList.add('nodrift');
-  bzDragSt2={startA:bzGetAngle(e,svg),startDeg:bzDeg2};
+  bzDragSt2={prevA:bzGetAngle(e,svg),accDeg:0,startOff:offsetMin};
   document.addEventListener('mousemove',bzDragMove2);
   document.addEventListener('mouseup',bzDragEnd2);
   document.addEventListener('touchmove',bzDragMove2,{passive:false});
@@ -1175,14 +1423,22 @@ function bzDragStart2(e){
 function bzDragMove2(e){
   if(!bzDragSt2)return;e.preventDefault();
   const svg=document.getElementById('bzSVG2');
-  const delta=bzGetAngle(e,svg)-bzDragSt2.startA;
-  bzApplyDeg2(bzDragSt2.startDeg+delta);
+  const curA=bzGetAngle(e,svg);
+  const step=((curA-bzDragSt2.prevA+540)%360)-180;
+  bzDragSt2.accDeg+=step;
+  bzDragSt2.prevA=curA;
+  offsetMin=Math.max(-1440,Math.min(1440,bzDragSt2.startOff+Math.round(-bzDragSt2.accDeg*4)));
+  document.getElementById('slider').value=offsetMin;
+  applyTX('instant');
+  updateLabels();
+  updateWallClocks();
+  const utcH=bzUtcHours(selTime());
+  bzApplyDeg(utcH*15,true);
+  bzApplyDeg2(-utcH*15,true);
 }
 function bzDragEnd2(){
   bzDragSt2=null;
-  bzManual2=true;
-  const dial=document.getElementById('bzDial2');
-  if(dial)dial.classList.remove('nodrift');
+  document.querySelectorAll('.tape').forEach(t=>{t.classList.remove('instant');t.classList.add('drift');});
   document.removeEventListener('mousemove',bzDragMove2);
   document.removeEventListener('mouseup',bzDragEnd2);
   document.removeEventListener('touchmove',bzDragMove2);
@@ -1206,13 +1462,208 @@ function initBezel2(){
 }
 
 /* ══════════════════════════════════
+   NEWSROOM WALL CLOCKS
+══════════════════════════════════ */
+let wallProj=null;
+
+function drawWallMap(){
+  const canvas=document.getElementById('wallMapCanvas');
+  if(!canvas||!mapTopo)return;
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth||window.innerWidth||960;
+  const padX=8, padY=10;
+
+  const landGeoms=mapTopo.objects.countries.geometries.filter(g=>g.id!=='010');
+  const land=topojson.merge(mapTopo,landGeoms);
+  wallProj=d3.geoNaturalEarth1().fitWidth(W-padX*2,land);
+  const [[x0,y0],[x1,y1]]=d3.geoPath().projection(wallProj).bounds(land);
+  const H=Math.max(180,Math.ceil(y1-y0))+padY*2;
+  const [tx,ty]=wallProj.translate();
+  wallProj.translate([tx+(padX-x0),ty+(padY-y0)]);
+
+  wrap.style.height=`${H}px`;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.round(W*dpr);
+  canvas.height=Math.round(H*dpr);
+
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const path=d3.geoPath().projection(wallProj).context(ctx);
+  ctx.fillStyle='#cfd6de';
+  ctx.beginPath();
+  path(land);
+  ctx.fill();
+
+  renderWallClocks();
+}
+
+function buildWallClockSVG(id,size){
+  let ticks='';
+  for(let i=0;i<60;i++){
+    const rad=(i*6-90)*Math.PI/180;
+    const isHr=i%5===0;
+    const r1=isHr?38.2:40.2;
+    const r2=42;
+    const x1=(Math.cos(rad)*r1).toFixed(2), y1=(Math.sin(rad)*r1).toFixed(2);
+    const x2=(Math.cos(rad)*r2).toFixed(2), y2=(Math.sin(rad)*r2).toFixed(2);
+    ticks+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isHr?'#1a2430':'#7a8694'}" stroke-width="${isHr?'1.4':'0.7'}"/>`;
+  }
+  let nums='';
+  for(let n=1;n<=12;n++){
+    const rad=(n*30-90)*Math.PI/180;
+    const r=32;
+    const nx=(Math.cos(rad)*r).toFixed(2), ny=(Math.sin(rad)*r).toFixed(2);
+    nums+=`<text x="${nx}" y="${ny}" text-anchor="middle" dominant-baseline="central" font-size="8.5" font-weight="600" font-family="Arial,sans-serif" fill="#1a2430">${n}</text>`;
+  }
+  return`<svg class="wclock-svg" style="width:${size}px;height:${size}px" viewBox="-54 -54 108 108" xmlns="http://www.w3.org/2000/svg" aria-label="${id}">
+    <defs>
+      <linearGradient id="wcRim-${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f4f6f8"/>
+        <stop offset="28%" stop-color="#b8c0c8"/>
+        <stop offset="55%" stop-color="#eef2f5"/>
+        <stop offset="82%" stop-color="#8e98a2"/>
+        <stop offset="100%" stop-color="#dce2e8"/>
+      </linearGradient>
+    </defs>
+    <circle r="51" fill="url(#wcRim-${id})" stroke="#9ba4ae" stroke-width="0.8"/>
+    <circle r="45.5" fill="#d0d6dc" stroke="#8c96a0" stroke-width="0.6"/>
+    <circle r="43.5" fill="#ffffff"/>
+    ${ticks}
+    ${nums}
+    <line id="wc-h-${id}" x1="0" y1="4" x2="0" y2="-22" stroke="#18222d" stroke-width="3" stroke-linecap="round"/>
+    <line id="wc-m-${id}" x1="0" y1="5" x2="0" y2="-33" stroke="#18222d" stroke-width="2" stroke-linecap="round"/>
+    <line id="wc-s-${id}" x1="0" y1="7" x2="0" y2="-36" stroke="#d05808" stroke-width="0.9" stroke-linecap="round"/>
+    <circle r="2.6" fill="#18222d"/>
+    <circle r="1.1" fill="#d05808"/>
+  </svg>`;
+}
+
+function renderWallClocks(){
+  const el=document.getElementById('wallClocks');
+  const ldr=document.getElementById('wallLeaders');
+  if(!el)return;
+  const wrap=el.parentElement;
+  const W=wrap.clientWidth||window.innerWidth||960;
+  const H=wrap.clientHeight||Math.round(W/2.25);
+
+  const list=cities.map(id=>DB.find(x=>x.id===id)).filter(Boolean);
+  if(!list.length){
+    el.innerHTML='';
+    if(ldr)ldr.innerHTML='';
+    return;
+  }
+
+  let D=Math.max(54,Math.min(92,Math.round(W*0.068)));
+  if(list.length>8)D=Math.max(46,Math.round(D*Math.sqrt(8/list.length)));
+
+  const labelH=48;
+  const boxW=Math.max(D+16,86);
+  const boxH=D+labelH+6;
+  const rx=boxW/2+3;
+  const ry=boxH/2+3;
+  const minX=boxW/2+6;
+  const maxX=Math.max(minX,W-boxW/2-6);
+  const minY=boxH/2+6;
+  const maxY=Math.max(minY,H-boxH/2-6);
+  const clampX=v=>Math.max(minX,Math.min(maxX,v));
+  const clampY=v=>Math.max(minY,Math.min(maxY,v));
+
+  const nodes=list.map((c,idx)=>{
+    let tx=(idx+0.5)/list.length*W, ty=H*0.5;
+    if(wallProj){
+      const pt=wallProj([c.lon,c.lat]);
+      if(pt){tx=pt[0];ty=pt[1];}
+    }
+    return{c,tx,ty,x:clampX(tx),y:clampY(ty)};
+  });
+
+  const iters=120;
+  for(let iter=0;iter<iters;iter++){
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const ni=nodes[i], nj=nodes[j];
+        let dx=nj.x-ni.x, dy=nj.y-ni.y;
+        if(Math.hypot(dx,dy)<0.01){
+          const a=((i*7+j*13)%12)*Math.PI/6;
+          dx=Math.cos(a)*0.5;
+          dy=Math.sin(a)*0.5;
+        }
+        const nx=dx/(2*rx), ny=dy/(2*ry);
+        const dist=Math.hypot(nx,ny);
+        if(dist<1){
+          const push=(1-dist)*0.55;
+          const ux=(nx/dist)*push*(2*rx);
+          const uy=(ny/dist)*push*(2*ry);
+          ni.x-=ux*0.5; ni.y-=uy*0.5;
+          nj.x+=ux*0.5; nj.y+=uy*0.5;
+        }
+      }
+    }
+    if(iter<85){
+      const k=0.06*(1-iter/85);
+      for(let i=0;i<nodes.length;i++){
+        const n=nodes[i];
+        n.x+=(clampX(n.tx)-n.x)*k;
+        n.y+=(clampY(n.ty)-n.y)*k;
+      }
+    }
+    for(let i=0;i<nodes.length;i++){
+      nodes[i].x=clampX(nodes[i].x);
+      nodes[i].y=clampY(nodes[i].y);
+    }
+  }
+
+  if(ldr){
+    ldr.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    ldr.innerHTML=nodes.map(n=>{
+      if(Math.hypot(n.x-n.tx,n.y-n.ty)<=D*0.45)return'';
+      return`<line x1="${n.tx.toFixed(1)}" y1="${n.ty.toFixed(1)}" x2="${n.x.toFixed(1)}" y2="${n.y.toFixed(1)}" stroke="rgba(90,122,144,.42)" stroke-width="1.2" stroke-dasharray="3,3"/>`
+        +`<circle cx="${n.tx.toFixed(1)}" cy="${n.ty.toFixed(1)}" r="2.8" fill="#d05808" stroke="#fff" stroke-width="1"/>`;
+    }).join('');
+  }
+
+  el.innerHTML=nodes.map(n=>`<div class="wclock" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
+    ${buildWallClockSVG(n.c.id,D)}
+    <div class="wclock-lbl">${n.c.en}</div>
+    <div class="wclock-dt">
+      <div class="wclock-date" id="wc-d-${n.c.id}"></div>
+      <div class="wclock-time" id="wc-t-${n.c.id}"></div>
+    </div>
+  </div>`).join('');
+
+  updateWallClocks();
+}
+
+function updateWallClocks(){
+  cities.forEach(id=>{
+    const c=DB.find(x=>x.id===id);if(!c)return;
+    const p=getParts(c.tz);
+    const sDeg=p.s*6;
+    const mDeg=p.m*6+p.s*0.1;
+    const hDeg=((p.h%12)+p.m/60+p.s/3600)*30;
+    const sh=document.getElementById(`wc-h-${c.id}`);
+    const sm=document.getElementById(`wc-m-${c.id}`);
+    const ss=document.getElementById(`wc-s-${c.id}`);
+    const sd=document.getElementById(`wc-d-${c.id}`);
+    const st=document.getElementById(`wc-t-${c.id}`);
+    if(sh)sh.setAttribute('transform',`rotate(${hDeg.toFixed(2)})`);
+    if(sm)sm.setAttribute('transform',`rotate(${mDeg.toFixed(2)})`);
+    if(ss)ss.setAttribute('transform',`rotate(${sDeg.toFixed(2)})`);
+    if(sd)sd.textContent=p.dateStrEn;
+    if(st)st.textContent=`${p.timeStr}:${p.secStr}`;
+  });
+}
+
+/* ══════════════════════════════════
    INIT
 ══════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{
   loadCitiesFromStorage();
   initRefTs();
   renderList();
-  initMap();   // async: draws canvas then calls renderMap()
+  initMap();   // async: loads map topojson then calls drawWallMap()
   initBezel();
   initBezel2();
   ticker=setInterval(tick,1000);
@@ -1221,7 +1672,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 // redraw map on resize
 window.addEventListener('resize',()=>{
   applyTX('instant');
-  if(mapTopo) drawMapCanvas();
+  if(mapTopo) drawWallMap();
 });
 </script>
 </body>
