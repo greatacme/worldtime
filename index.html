@@ -1481,15 +1481,21 @@ function drawWallMap(){
   if(!canvas||!mapTopo)return;
   const wrap=canvas.parentElement;
   const W=wrap.clientWidth||window.innerWidth||960;
-  const padX=8, padY=10;
+  const padLeft=4, padRight=8, padY=10;
 
   const landGeoms=mapTopo.objects.countries.geometries.filter(g=>g.id!=='010');
   const land=topojson.merge(mapTopo,landGeoms);
-  wallProj=d3.geoNaturalEarth1().rotate([-11,0]).fitWidth(W-padX*2,land);
-  const [[x0,y0],[x1,y1]]=d3.geoPath().projection(wallProj).bounds(land);
+  const fitLand={
+    type:'MultiPolygon',
+    coordinates:land.coordinates.filter(poly=>
+      !poly[0].every(([lon,lat])=>lon>-165&&lon<-150&&lat>15&&lat<30)
+    )
+  };
+  wallProj=d3.geoNaturalEarth1().rotate([-11,0]).fitWidth(W-padLeft-padRight,fitLand);
+  const [[x0,y0],[x1,y1]]=d3.geoPath().projection(wallProj).bounds(fitLand);
   const H=Math.max(180,Math.ceil(y1-y0))+padY*2;
   const [tx,ty]=wallProj.translate();
-  wallProj.translate([tx+(padX-x0),ty+(padY-y0)]);
+  wallProj.translate([tx+(padLeft-x0),ty+(padY-y0)]);
 
   wrap.style.height=`${H}px`;
   const dpr=window.devicePixelRatio||1;
@@ -1629,8 +1635,10 @@ function renderWallClocks(){
     ldr.setAttribute('viewBox',`0 0 ${W} ${H}`);
     ldr.innerHTML=nodes.map(n=>{
       if(Math.hypot(n.x-n.tx,n.y-n.ty)<=D*0.45)return'';
-      return`<line x1="${n.tx.toFixed(1)}" y1="${n.ty.toFixed(1)}" x2="${n.x.toFixed(1)}" y2="${n.y.toFixed(1)}" stroke="rgba(90,122,144,.42)" stroke-width="1.2" stroke-dasharray="3,3"/>`
-        +`<circle cx="${n.tx.toFixed(1)}" cy="${n.ty.toFixed(1)}" r="2.8" fill="#d05808" stroke="#fff" stroke-width="1"/>`;
+      const pinX=Math.max(4,Math.min(W-4,n.tx));
+      const pinY=Math.max(4,Math.min(H-4,n.ty));
+      return`<line x1="${pinX.toFixed(1)}" y1="${pinY.toFixed(1)}" x2="${n.x.toFixed(1)}" y2="${n.y.toFixed(1)}" stroke="rgba(90,122,144,.42)" stroke-width="1.2" stroke-dasharray="3,3"/>`
+        +`<circle cx="${pinX.toFixed(1)}" cy="${pinY.toFixed(1)}" r="2.8" fill="#d05808" stroke="#fff" stroke-width="1"/>`;
     }).join('');
   }
 
