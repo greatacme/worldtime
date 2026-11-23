@@ -128,18 +128,67 @@ body{
 }
 
 /* ── BOTTOM CITY SETTINGS BAR ── */
-.citybar{
+.citydock{
   flex-shrink:0;
+  position:relative;
+  z-index:120;
+}
+.bar-toggle{
+  position:absolute;
+  left:50%;
+  bottom:100%;
+  transform:translateX(-50%);
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:3px 13px 2px;
+  border:1px solid var(--border);
+  border-bottom:none;
+  border-radius:10px 10px 0 0;
+  background:rgba(248,251,254,.92);
+  backdrop-filter:blur(6px);
+  color:var(--dim);
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 -2px 8px rgba(30,80,130,.07);
+  transition:opacity .18s,color .15s,border-color .15s,background .15s;
+  white-space:nowrap;
+}
+.bar-toggle:hover,.bar-toggle:focus-visible{
+  opacity:1;
+  color:var(--accent);
+  border-color:rgba(18,96,160,.35);
+  background:rgba(255,255,255,.96);
+  outline:none;
+}
+.bar-toggle-ico{
+  display:inline-block;
+  font-size:11px;
+  line-height:1;
+  transition:transform .2s;
+}
+.citydock.collapsed .citybar{
+  display:none;
+}
+.citydock.collapsed .bar-toggle{
+  opacity:.35;
+}
+.citydock.collapsed .bar-toggle:hover,.citydock.collapsed .bar-toggle:focus-visible{
+  opacity:1;
+}
+.citydock.collapsed .bar-toggle-ico{
+  transform:rotate(180deg);
+}
+.citybar{
   display:flex;
   align-items:center;
   gap:12px;
   padding:10px 20px;
-  background:#f8fbfe;
+  background:rgba(248,251,254,.92);
+  backdrop-filter:blur(8px);
   border-top:1px solid var(--border);
   box-shadow:0 -2px 10px rgba(30,80,130,.05);
-}
-.citybar.collapsed{
-  display:none;
 }
 .citybar-head{
   display:flex;
@@ -286,32 +335,6 @@ body{
   color:var(--accent);
   background:#fff;
 }
-.fab-show{
-  position:fixed;
-  right:14px;
-  bottom:14px;
-  z-index:120;
-  padding:6px 13px;
-  border-radius:20px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.88);
-  color:var(--dim);
-  font-size:11.5px;
-  font-weight:700;
-  cursor:pointer;
-  box-shadow:0 2px 10px rgba(30,80,130,.12);
-  opacity:.6;
-  transition:all .15s;
-}
-.fab-show:hover{
-  opacity:1;
-  border-color:var(--accent);
-  color:var(--accent);
-}
-.fab-show.hidden{
-  display:none;
-}
-
 @media (max-width:640px){
   .citybar{flex-wrap:wrap;padding:8px 12px;gap:8px}
   .citybar-chips{order:3;flex-basis:100%;max-height:84px}
@@ -390,24 +413,29 @@ body{
   </div>
 </main>
 
-<section class="citybar" id="cityBar" aria-label="도시 설정">
-  <div class="citybar-head">
-    <span class="citybar-title">도시 설정</span>
-    <span class="citybar-cnt" id="cityCount">0</span>
-  </div>
-  <div class="citybar-chips" id="cityChips"></div>
-  <div class="citybar-actions">
-    <button type="button" class="badd-pill" onclick="openSearch()" title="도시 추가">
-      <span class="badd-plus">+</span>
-      <span>도시 추가</span>
-    </button>
-    <button type="button" class="btn-mini" id="btnFull" onclick="toggleFullscreen()" title="전체화면 전환">전체화면</button>
-    <button type="button" class="btn-mini" onclick="toggleCityBar()" title="도시 설정 바 숨기기">숨기기</button>
-    <a class="btn-mini-link" href="index.html" title="메인 화면으로 이동">메인</a>
-  </div>
-</section>
-
-<button type="button" class="fab-show hidden" id="btnShowBar" onclick="toggleCityBar()" title="도시 설정 열기">도시 설정</button>
+<div class="citydock" id="cityDock">
+  <button type="button" class="bar-toggle" id="btnToggleBar"
+    onclick="toggleCityBar()" aria-expanded="true" aria-controls="cityBar"
+    title="도시 목록 숨기기 / 펼치기">
+    <span class="bar-toggle-ico" aria-hidden="true">▾</span>
+    <span id="barToggleLbl">도시 목록 숨기기</span>
+  </button>
+  <section class="citybar" id="cityBar" aria-label="도시 설정">
+    <div class="citybar-head">
+      <span class="citybar-title">도시 설정</span>
+      <span class="citybar-cnt" id="cityCount">0</span>
+    </div>
+    <div class="citybar-chips" id="cityChips"></div>
+    <div class="citybar-actions">
+      <button type="button" class="badd-pill" onclick="openSearch()" title="도시 추가">
+        <span class="badd-plus">+</span>
+        <span>도시 추가</span>
+      </button>
+      <button type="button" class="btn-mini" id="btnFull" onclick="toggleFullscreen()" title="전체화면 전환">전체화면</button>
+      <a class="btn-mini-link" href="index.html" title="메인 화면으로 이동">메인</a>
+    </div>
+  </section>
+</div>
 
 <div class="overlay hidden" id="overlay" onclick="bgClick(event)">
   <div class="sbox">
@@ -606,6 +634,7 @@ const DB=[
    STATE & LOCALSTORAGE
 ══════════════════════════════════ */
 const STORAGE_KEY = 'worldtime_cities';
+const BAR_HIDDEN_KEY = 'worldtime_wall_bar_hidden';
 const DEFAULT_WALL_CITIES = ['seoul','tokyo','london','paris','newyork','sydney'];
 const validIds = new Set(DB.map(c=>c.id));
 
@@ -1101,13 +1130,43 @@ function scheduleRedraw(){
   });
 }
 
-function toggleCityBar(){
-  const bar = document.getElementById('cityBar');
-  const fab = document.getElementById('btnShowBar');
-  if(!bar)return;
-  const collapsed = bar.classList.toggle('collapsed');
-  if(fab) fab.classList.toggle('hidden', !collapsed);
+function applyCityBarState(collapsed, persist = true){
+  const dock = document.getElementById('cityDock');
+  const btn = document.getElementById('btnToggleBar');
+  const lbl = document.getElementById('barToggleLbl');
+  if(!dock)return;
+  dock.classList.toggle('collapsed', collapsed);
+  if(btn) btn.setAttribute('aria-expanded', String(!collapsed));
+  if(lbl) lbl.textContent = collapsed ? '도시 목록' : '도시 목록 숨기기';
+  if(persist){
+    try{
+      localStorage.setItem(BAR_HIDDEN_KEY, collapsed ? '1' : '0');
+    }catch(e){}
+  }
   scheduleRedraw();
+}
+
+function toggleCityBar(){
+  const dock = document.getElementById('cityDock');
+  if(!dock)return;
+  applyCityBarState(!dock.classList.contains('collapsed'), true);
+}
+
+function loadCityBarState(){
+  const param = new URLSearchParams(window.location.search).get('bar');
+  if(param === '0'){
+    applyCityBarState(true, false);
+    return;
+  }
+  if(param === '1'){
+    applyCityBarState(false, false);
+    return;
+  }
+  let hidden = false;
+  try{
+    hidden = localStorage.getItem(BAR_HIDDEN_KEY) === '1';
+  }catch(e){}
+  applyCityBarState(hidden, false);
 }
 
 function toggleFullscreen(){
@@ -1144,12 +1203,18 @@ window.addEventListener('storage',e=>{
       renderSearch();
     }
   }
+  if(e.key===BAR_HIDDEN_KEY){
+    applyCityBarState(e.newValue==='1', false);
+  }else if(e.key===null){
+    loadCityBarState();
+  }
 });
 
 /* ══════════════════════════════════
    INIT
 ══════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{
+  loadCityBarState();
   loadCitiesFromStorage();
   renderCityChips();
   initMap();
