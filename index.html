@@ -1475,7 +1475,7 @@ function drawWallMap(){
 
   const landGeoms=mapTopo.objects.countries.geometries.filter(g=>g.id!=='010');
   const land=topojson.merge(mapTopo,landGeoms);
-  wallProj=d3.geoNaturalEarth1().fitWidth(W-padX*2,land);
+  wallProj=d3.geoNaturalEarth1().rotate([-11,0]).fitWidth(W-padX*2,land);
   const [[x0,y0],[x1,y1]]=d3.geoPath().projection(wallProj).bounds(land);
   const H=Math.max(180,Math.ceil(y1-y0))+padY*2;
   const [tx,ty]=wallProj.translate();
