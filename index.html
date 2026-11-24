@@ -106,13 +106,13 @@ body{
   filter:drop-shadow(0 4px 10px rgba(20,40,65,.18));
 }
 .wclock-lbl{
-  font-size:clamp(10px,1vw,13px);
+  font-size:clamp(11px,1.25vw,16px);
   font-weight:700;
   color:#182b3a;
   letter-spacing:.2px;
   white-space:nowrap;
   background:rgba(255,255,255,.82);
-  padding:1px 7px;
+  padding:2px 8px;
   border-radius:10px;
   line-height:1.25;
 }
@@ -121,17 +121,17 @@ body{
   flex-direction:column;
   align-items:center;
   background:rgba(255,255,255,.84);
-  padding:1px 7px 2px;
+  padding:2px 8px 3px;
   border-radius:8px;
   line-height:1.2;
 }
 .wclock-date{
-  font-size:clamp(9px,0.85vw,10.5px);
+  font-size:clamp(10px,1vw,13px);
   color:var(--dim);
   white-space:nowrap;
 }
 .wclock-time{
-  font-size:clamp(10px,0.95vw,12px);
+  font-size:clamp(11px,1.15vw,15px);
   font-weight:700;
   color:var(--accent);
   font-variant-numeric:tabular-nums;
@@ -1572,12 +1572,14 @@ function renderWallClocks(){
     return;
   }
 
-  let D=Math.max(54,Math.min(92,Math.round(W*0.068)));
-  if(list.length>8)D=Math.max(46,Math.round(D*Math.sqrt(8/list.length)));
+  const maxByH=Math.max(54,Math.round((H-68)*0.45));
+  let D=Math.max(81,Math.min(138,Math.round(W*0.102)));
+  D=Math.min(D,maxByH);
+  if(list.length>8)D=Math.max(60,Math.round(D*Math.sqrt(8/list.length)));
 
-  const labelH=48;
-  const boxW=Math.max(D+16,86);
-  const boxH=D+labelH+6;
+  const labelH=Math.round(Math.max(50,Math.min(64,D*0.44)));
+  const boxW=Math.max(D+20,104);
+  const boxH=D+labelH+8;
   const rx=boxW/2+3;
   const ry=boxH/2+3;
   const minX=boxW/2+6;
