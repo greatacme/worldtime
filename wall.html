@@ -83,16 +83,42 @@ body{
   filter:drop-shadow(0 4px 10px rgba(20,40,65,.18));
 }
 .wclock-lbl{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
   font-size:clamp(12px,1.35vw,18px);
   font-weight:700;
   color:#182b3a;
   letter-spacing:.2px;
   white-space:nowrap;
   background:rgba(255,255,255,.84);
+  border:1px solid transparent;
   padding:2px 9px;
   border-radius:10px;
   line-height:1.25;
 }
+.wclock.is-dst .wclock-lbl{
+  border-color:rgba(212,130,10,.42);
+  background:rgba(255,252,243,.92);
+}
+.dst-badge{
+  display:inline-flex;align-items:center;gap:2.5px;
+  padding:1.5px 5.5px;border-radius:999px;
+  background:#fff2cc;border:1px solid rgba(212,130,10,.45);
+  color:#9e5300;font-size:9.5px;font-weight:700;
+  line-height:1.15;letter-spacing:.35px;white-space:nowrap;
+  flex-shrink:0;vertical-align:middle;
+}
+.dst-badge[hidden]{display:none!important}
+.dst-ico{width:9px;height:9px;flex-shrink:0;display:block}
+.dst-badge-wall{
+  padding:1px 6px;
+  font-size:clamp(9px,.88vw,12px);
+  gap:2.5px;
+}
+.dst-badge-wall .dst-ico{width:clamp(8.5px,.84vw,11px);height:clamp(8.5px,.84vw,11px)}
+.dst-badge-sm{padding:1px 5px;font-size:9px;gap:2px}
+.dst-badge-sm .dst-ico{width:8.5px;height:8.5px}
 .wclock-dt{
   display:flex;
   flex-direction:column;
@@ -238,6 +264,10 @@ body{
   font-size:12px;
   user-select:none;
   cursor:grab;
+}
+.cchip.is-dst{
+  border-color:rgba(212,130,10,.42);
+  background:#fffcf4;
 }
 .cchip:active{cursor:grabbing}
 .cchip.dragging{opacity:.35;box-shadow:none}
@@ -401,6 +431,7 @@ body{
 .sinf{flex:1}
 .sname{font-size:13px;font-weight:600}
 .scountry{font-size:10px;color:var(--dim)}
+.smeta{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .stime{font-size:14px;font-weight:700;color:var(--acc2)}
 </style>
 </head>
@@ -665,8 +696,47 @@ function loadCitiesFromStorage(){
 /* ══════════════════════════════════
    LIVE TIME HELPER
 ══════════════════════════════════ */
+const DST_ICON='<svg class="dst-ico" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="2.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><line x1="6" y1="0.8" x2="6" y2="2.2"/><line x1="6" y1="9.8" x2="6" y2="11.2"/><line x1="0.8" y1="6" x2="2.2" y2="6"/><line x1="9.8" y1="6" x2="11.2" y2="6"/><line x1="2.3" y1="2.3" x2="3.3" y2="3.3"/><line x1="8.7" y1="8.7" x2="9.7" y2="9.7"/><line x1="9.7" y1="2.3" x2="8.7" y2="3.3"/><line x1="3.3" y1="8.7" x2="2.3" y2="9.7"/></g></svg>';
+const dstYearCache = new Map();
+
+function tzOffsetMin(ts, tz){
+  const t = Math.floor(ts / 60000) * 60000;
+  const fmt = new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit'
+  });
+  const p={};
+  fmt.formatToParts(new Date(t)).forEach(x=>p[x.type]=x.value);
+  let h=parseInt(p.hour,10);if(h===24)h=0;
+  const localUtc=Date.UTC(+p.year,+p.month-1,+p.day,h,+p.minute);
+  return Math.round((localUtc-t)/60000);
+}
+
+function isDST(tz, ts = Date.now(), curOff){
+  const d = new Date(ts);
+  const y = d.getUTCFullYear();
+  const key = `${tz}|${y}`;
+  let ref = dstYearCache.get(key);
+  if(!ref){
+    const jan = tzOffsetMin(Date.UTC(y,0,1,12), tz);
+    const jul = tzOffsetMin(Date.UTC(y,6,1,12), tz);
+    const nextJan = tzOffsetMin(Date.UTC(y+1,0,1,12), tz);
+    ref = {jan, jul, nextJan, std:Math.min(jan, jul)};
+    dstYearCache.set(key, ref);
+  }
+  if(ref.jan === ref.jul) return false;
+  const cur = curOff !== undefined ? curOff : tzOffsetMin(ts, tz);
+  if(ref.jan === ref.nextJan) return cur > ref.std;
+  const part = new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,timeZoneName:'long'
+  }).formatToParts(d).find(x=>x.type==='timeZoneName');
+  return /\b(Daylight|Summer)\b/i.test(part ? part.value : '');
+}
+
 function getParts(tz){
-  const now = new Date();
+  const tsSec = Math.floor(Date.now() / 1000) * 1000;
+  const now = new Date(tsSec);
   const fmt = new Intl.DateTimeFormat('en-US',{
     timeZone:tz,hour12:false,
     year:'numeric',month:'2-digit',day:'2-digit',
@@ -680,14 +750,17 @@ function getParts(tz){
   const wd=new Intl.DateTimeFormat('ko-KR',{timeZone:tz,weekday:'short'}).format(now).replace('요일','');
   const wdEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short'}).format(now);
   const monEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,month:'short'}).format(now);
-  const tzAbbr=fmt.formatToParts(now).find(x=>x.type==='timeZoneName')?.value||'';
+  const tzAbbr=p.timeZoneName||'';
+  const localUtc=Date.UTC(+p.year,+p.month-1,+p.day,h,m,s);
+  const curOff=Math.round((localUtc-tsSec)/60000);
   return{
     h,m,s,
     timeStr:`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     secStr:String(s).padStart(2,'0'),
     dateStr:`${p.month}-${p.day}(${wd})`,
     dateStrEn:`${monEn} ${p.day} (${wdEn})`,
-    tzAbbr
+    tzAbbr,
+    dst:isDST(tz,tsSec,curOff)
   };
 }
 
@@ -897,9 +970,12 @@ function renderWallClocks(){
     }).join('');
   }
 
-  el.innerHTML=nodes.map(n=>`<div class="wclock" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
+  el.innerHTML=nodes.map(n=>`<div class="wclock" id="wc-wrap-${n.c.id}" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
     ${buildWallClockSVG(n.c.id,D)}
-    <div class="wclock-lbl">${n.c.en}</div>
+    <div class="wclock-lbl">
+      <span>${n.c.en}</span>
+      <span class="dst-badge dst-badge-wall" id="wc-dst-${n.c.id}" title="서머타임(DST) 적용 중" hidden>${DST_ICON}DST</span>
+    </div>
     <div class="wclock-dt">
       <div class="wclock-date" id="wc-d-${n.c.id}"></div>
       <div class="wclock-time" id="wc-t-${n.c.id}"></div>
@@ -921,11 +997,25 @@ function updateWallClocks(){
     const ss = document.getElementById(`wc-s-${c.id}`);
     const sd = document.getElementById(`wc-d-${c.id}`);
     const st = document.getElementById(`wc-t-${c.id}`);
+    const sw = document.getElementById(`wc-wrap-${c.id}`);
+    const sdst = document.getElementById(`wc-dst-${c.id}`);
+    const chip = document.querySelector(`.cchip[data-id="${c.id}"]`);
+    const chipDst = document.querySelector(`[data-chip-dst="${c.id}"]`);
     if(sh)sh.setAttribute('transform',`rotate(${hDeg.toFixed(2)})`);
     if(sm)sm.setAttribute('transform',`rotate(${mDeg.toFixed(2)})`);
     if(ss)ss.setAttribute('transform',`rotate(${sDeg.toFixed(2)})`);
     if(sd)sd.textContent=p.dateStrEn;
     if(st)st.textContent=`${p.timeStr}:${p.secStr}`;
+    if(sw){
+      sw.classList.toggle('is-dst',p.dst);
+      sw.title=p.dst?`${c.name} (${c.en}) · 서머타임(DST) 적용 중`:`${c.name} (${c.en})`;
+    }
+    if(sdst)sdst.hidden=!p.dst;
+    if(chip){
+      chip.classList.toggle('is-dst',p.dst);
+      chip.title=`${c.name} (${c.en})${p.dst?' · 서머타임(DST) 적용 중':''} — 드래그하여 순서 변경`;
+    }
+    if(chipDst)chipDst.hidden=!p.dst;
   });
 }
 
@@ -946,16 +1036,18 @@ function renderCityChips(){
   el.innerHTML=cities.map(id=>{
     const c = DB.find(x=>x.id===id);
     if(!c)return'';
-    return`<div class="cchip" draggable="true" data-id="${id}"
+    const dst = isDST(c.tz);
+    return`<div class="cchip${dst?' is-dst':''}" draggable="true" data-id="${id}"
       ondragstart="chipDragStart(event,'${id}')"
       ondragover="chipDragOver(event,'${id}')"
       ondragleave="chipDragLeave(event)"
       ondrop="chipDrop(event,'${id}')"
       ondragend="chipDragEnd()"
-      title="${c.name} (${c.en}) — 드래그하여 순서 변경">
+      title="${c.name} (${c.en})${dst?' · 서머타임(DST) 적용 중':''} — 드래그하여 순서 변경">
       <span class="cchip-drag">⠿</span>
       <span class="cchip-flag">${c.flag}</span>
       <span class="cchip-name">${c.name}</span>
+      <span class="dst-badge dst-badge-sm" data-chip-dst="${id}" title="서머타임(DST) 적용 중"${dst?'':' hidden'}>${DST_ICON}DST</span>
       <button type="button" class="cchip-rm"
         onmousedown="event.stopPropagation()"
         onclick="event.stopPropagation();removeCity('${id}')"
@@ -1060,12 +1152,14 @@ function renderSearch(){
   const q = document.getElementById('sinp').value.trim().toLowerCase();
   const el = document.getElementById('sres');
   const bar = document.getElementById('sregbar');
+  const qDst = (q === 'dst' || q === '서머타임' || q === '서머');
   const matchedAll = DB.filter(c=>!cities.includes(c.id)&&(
     !q||
     c.name.toLowerCase().includes(q)||
     c.en.toLowerCase().includes(q)||
     c.country.toLowerCase().includes(q)||
-    c.region.toLowerCase().includes(q)
+    c.region.toLowerCase().includes(q)||
+    (qDst && isDST(c.tz))
   ));
 
   const regCounts = new Map();
@@ -1108,7 +1202,10 @@ function renderSearch(){
           <div class="sname">${c.name} <span style="font-size:10px;color:var(--dim)">${c.en}</span></div>
           <div class="scountry">${c.country}</div>
         </div>
-        <span class="stime">${p.timeStr}</span>
+        <div class="smeta">
+          ${p.dst?`<span class="dst-badge dst-badge-sm" title="서머타임(DST) 적용 중">${DST_ICON}DST</span>`:''}
+          <span class="stime">${p.timeStr}</span>
+        </div>
       </div>`;
     }).join('');
   });
