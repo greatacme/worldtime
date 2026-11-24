@@ -83,24 +83,28 @@ body{
   filter:drop-shadow(0 4px 10px rgba(20,40,65,.18));
 }
 .wclock-lbl{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
   font-size:clamp(12px,1.35vw,18px);
   font-weight:700;
   color:#182b3a;
   letter-spacing:.2px;
   white-space:nowrap;
   background:rgba(255,255,255,.84);
-  border:1px solid transparent;
   padding:2px 9px;
   border-radius:10px;
   line-height:1.25;
 }
-.wclock.is-dst .wclock-lbl{
-  border-color:rgba(212,130,10,.42);
-  background:rgba(255,252,243,.92);
+.wclock-dst{
+  position:relative;
+  top:-0.48em;
+  vertical-align:baseline;
+  margin-left:2px;
+  font-size:max(9px,.6em);
+  font-weight:700;
+  color:var(--orange);
+  line-height:0;
+  letter-spacing:.2px;
 }
+.wclock-dst[hidden]{display:none!important}
 .dst-badge{
   display:inline-flex;align-items:center;gap:2.5px;
   padding:1.5px 5.5px;border-radius:999px;
@@ -111,12 +115,6 @@ body{
 }
 .dst-badge[hidden]{display:none!important}
 .dst-ico{width:9px;height:9px;flex-shrink:0;display:block}
-.dst-badge-wall{
-  padding:1px 6px;
-  font-size:clamp(9px,.88vw,12px);
-  gap:2.5px;
-}
-.dst-badge-wall .dst-ico{width:clamp(8.5px,.84vw,11px);height:clamp(8.5px,.84vw,11px)}
 .dst-badge-sm{padding:1px 5px;font-size:9px;gap:2px}
 .dst-badge-sm .dst-ico{width:8.5px;height:8.5px}
 .wclock-dt{
@@ -972,10 +970,7 @@ function renderWallClocks(){
 
   el.innerHTML=nodes.map(n=>`<div class="wclock" id="wc-wrap-${n.c.id}" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
     ${buildWallClockSVG(n.c.id,D)}
-    <div class="wclock-lbl">
-      <span>${n.c.en}</span>
-      <span class="dst-badge dst-badge-wall" id="wc-dst-${n.c.id}" title="서머타임(DST) 적용 중" hidden>${DST_ICON}DST</span>
-    </div>
+    <div class="wclock-lbl">${n.c.en}<sup class="wclock-dst" id="wc-dst-${n.c.id}" title="서머타임(DST) 적용 중" hidden>+DST</sup></div>
     <div class="wclock-dt">
       <div class="wclock-date" id="wc-d-${n.c.id}"></div>
       <div class="wclock-time" id="wc-t-${n.c.id}"></div>
@@ -1006,10 +1001,7 @@ function updateWallClocks(){
     if(ss)ss.setAttribute('transform',`rotate(${sDeg.toFixed(2)})`);
     if(sd)sd.textContent=p.dateStrEn;
     if(st)st.textContent=`${p.timeStr}:${p.secStr}`;
-    if(sw){
-      sw.classList.toggle('is-dst',p.dst);
-      sw.title=p.dst?`${c.name} (${c.en}) · 서머타임(DST) 적용 중`:`${c.name} (${c.en})`;
-    }
+    if(sw)sw.title=p.dst?`${c.name} (${c.en}) · 서머타임(DST) 적용 중`:`${c.name} (${c.en})`;
     if(sdst)sdst.hidden=!p.dst;
     if(chip){
       chip.classList.toggle('is-dst',p.dst);
