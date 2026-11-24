@@ -106,15 +106,23 @@ body{
   filter:drop-shadow(0 4px 10px rgba(20,40,65,.18));
 }
 .wclock-lbl{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
   font-size:clamp(11px,1.25vw,16px);
   font-weight:700;
   color:#182b3a;
   letter-spacing:.2px;
   white-space:nowrap;
   background:rgba(255,255,255,.82);
+  border:1px solid transparent;
   padding:2px 8px;
   border-radius:10px;
   line-height:1.25;
+}
+.wclock.is-dst .wclock-lbl{
+  border-color:rgba(212,130,10,.42);
+  background:rgba(255,252,243,.92);
 }
 .wclock-dt{
   display:flex;
@@ -191,6 +199,29 @@ body{
 .chm{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.5px}
 .cs{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
 .cr3{font-size:10px;color:var(--dim)}
+.card.is-dst .cleft{
+  background:linear-gradient(180deg,#fffbf0 0%,#faf4e4 100%);
+  box-shadow:inset 3px 0 0 #de8912;
+}
+.cr2 .dst-badge{align-self:center;margin-left:auto}
+.dst-badge{
+  display:inline-flex;align-items:center;gap:2.5px;
+  padding:1.5px 5.5px;border-radius:999px;
+  background:#fff2cc;border:1px solid rgba(212,130,10,.45);
+  color:#9e5300;font-size:9.5px;font-weight:700;
+  line-height:1.15;letter-spacing:.35px;white-space:nowrap;
+  flex-shrink:0;vertical-align:middle;
+}
+.dst-badge[hidden]{display:none!important}
+.dst-ico{width:9px;height:9px;flex-shrink:0;display:block}
+.dst-badge-wall{
+  padding:1px 5px;
+  font-size:clamp(8.5px,.82vw,11px);
+  gap:2px;
+}
+.dst-badge-wall .dst-ico{width:clamp(8px,.78vw,10px);height:clamp(8px,.78vw,10px)}
+.dst-badge-sm{padding:1px 5px;font-size:9px;gap:2px}
+.dst-badge-sm .dst-ico{width:8.5px;height:8.5px}
 
 /* ── TAPE RIGHT PANEL ── */
 .cright{
@@ -390,6 +421,7 @@ input[type=range]::-moz-range-thumb{
 .sinf{flex:1}
 .sname{font-size:13px;font-weight:600}
 .scountry{font-size:10px;color:var(--dim)}
+.smeta{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .stime{font-size:14px;font-weight:700;color:var(--acc2)}
 </style>
 </head>
@@ -672,7 +704,45 @@ function loadCitiesFromStorage(){
 /* ══════════════════════════════════
    TIME HELPERS
 ══════════════════════════════════ */
+const DST_ICON='<svg class="dst-ico" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="2.4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><line x1="6" y1="0.8" x2="6" y2="2.2"/><line x1="6" y1="9.8" x2="6" y2="11.2"/><line x1="0.8" y1="6" x2="2.2" y2="6"/><line x1="9.8" y1="6" x2="11.2" y2="6"/><line x1="2.3" y1="2.3" x2="3.3" y2="3.3"/><line x1="8.7" y1="8.7" x2="9.7" y2="9.7"/><line x1="9.7" y1="2.3" x2="8.7" y2="3.3"/><line x1="3.3" y1="8.7" x2="2.3" y2="9.7"/></g></svg>';
+const dstYearCache=new Map();
+
 function selTime(){ return Date.now() + offsetMin*60000; }
+
+function tzOffsetMin(ts,tz){
+  const t=Math.floor(ts/60000)*60000;
+  const fmt=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,hour12:false,
+    year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit'
+  });
+  const p={};
+  fmt.formatToParts(new Date(t)).forEach(x=>p[x.type]=x.value);
+  let h=parseInt(p.hour,10);if(h===24)h=0;
+  const localUtc=Date.UTC(+p.year,+p.month-1,+p.day,h,+p.minute);
+  return Math.round((localUtc-t)/60000);
+}
+
+function isDST(tz,ts=selTime(),curOff){
+  const d=new Date(ts);
+  const y=d.getUTCFullYear();
+  const key=`${tz}|${y}`;
+  let ref=dstYearCache.get(key);
+  if(!ref){
+    const jan=tzOffsetMin(Date.UTC(y,0,1,12),tz);
+    const jul=tzOffsetMin(Date.UTC(y,6,1,12),tz);
+    const nextJan=tzOffsetMin(Date.UTC(y+1,0,1,12),tz);
+    ref={jan,jul,nextJan,std:Math.min(jan,jul)};
+    dstYearCache.set(key,ref);
+  }
+  if(ref.jan===ref.jul)return false;
+  const cur=curOff!==undefined?curOff:tzOffsetMin(ts,tz);
+  if(ref.jan===ref.nextJan)return cur>ref.std;
+  const part=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,timeZoneName:'long'
+  }).formatToParts(d).find(x=>x.type==='timeZoneName');
+  return /\b(Daylight|Summer)\b/i.test(part?part.value:'');
+}
 
 function localHourAt(ts, tz){
   return parseInt(
@@ -681,8 +751,9 @@ function localHourAt(ts, tz){
 }
 
 function getParts(tz){
-  const now = new Date(selTime());
-  const fmt = new Intl.DateTimeFormat('en-US',{
+  const tsSec=Math.floor(selTime()/1000)*1000;
+  const now=new Date(tsSec);
+  const fmt=new Intl.DateTimeFormat('en-US',{
     timeZone:tz,hour12:false,
     year:'numeric',month:'2-digit',day:'2-digit',
     hour:'2-digit',minute:'2-digit',second:'2-digit',
@@ -695,14 +766,17 @@ function getParts(tz){
   const wd=new Intl.DateTimeFormat('ko-KR',{timeZone:tz,weekday:'short'}).format(now).replace('요일','');
   const wdEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short'}).format(now);
   const monEn=new Intl.DateTimeFormat('en-US',{timeZone:tz,month:'short'}).format(now);
-  const tzAbbr=fmt.formatToParts(now).find(x=>x.type==='timeZoneName')?.value||'';
+  const tzAbbr=p.timeZoneName||'';
+  const localUtc=Date.UTC(+p.year,+p.month-1,+p.day,h,m,s);
+  const curOff=Math.round((localUtc-tsSec)/60000);
   return{
     h,m,s,
     timeStr:`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,
     secStr:String(s).padStart(2,'0'),
     dateStr:`${p.month}-${p.day}(${wd})`,
     dateStrEn:`${monEn} ${p.day} (${wdEn})`,
-    tzAbbr
+    tzAbbr,
+    dst:isDST(tz,tsSec,curOff)
   };
 }
 
@@ -767,7 +841,7 @@ function buildCard(id){
   const city=DB.find(c=>c.id===id);
   if(!city)return'';
   const p=getParts(city.tz);
-  return`<div class="card" data-id="${id}"
+  return`<div class="card${p.dst?' is-dst':''}" data-id="${id}"
     ondragover="cardDragOver(event,'${id}')"
     ondragleave="cardDragLeave(event)"
     ondrop="cardDrop(event,'${id}')">
@@ -786,6 +860,7 @@ function buildCard(id){
       <div class="cr2">
         <span class="chm" data-id="${id}-hm">${p.timeStr}</span>
         <span class="cs"  data-id="${id}-s">:${p.secStr}</span>
+        <span class="dst-badge" data-id="${id}-dst" title="서머타임(DST) 적용 중"${p.dst?'':' hidden'}>${DST_ICON}DST</span>
       </div>
       <div class="cr3" data-id="${id}-r3">${p.dateStr} · ${p.tzAbbr}</div>
     </div>
@@ -823,17 +898,9 @@ function renderList(){
    TICK (1 s) — update labels + tape
 ══════════════════════════════════ */
 function tick(){
-  cities.forEach(id=>{
-    const city=DB.find(c=>c.id===id);if(!city)return;
-    const p=getParts(city.tz);
-    const hm=document.querySelector(`[data-id="${id}-hm"]`);
-    const s =document.querySelector(`[data-id="${id}-s"]`);
-    const r3=document.querySelector(`[data-id="${id}-r3"]`);
-    if(hm)hm.textContent=p.timeStr;
-    if(s) s.textContent=`:${p.secStr}`;
-    if(r3)r3.textContent=`${p.dateStr} · ${p.tzAbbr}`;
-  });
+  updateLabels();
   applyTX('drift');
+  bzSyncSlots();
   bzUpdate();
   bzUpdate2();
   updateWallClocks();
@@ -865,6 +932,7 @@ function onSlider(v){
   if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
   applyTX('quick');
   updateLabels();
+  bzSyncSlots();
   bzUpdate(true);
   bzUpdate2(true);
   updateWallClocks();
@@ -873,11 +941,15 @@ function updateLabels(){
   cities.forEach(id=>{
     const city=DB.find(c=>c.id===id);if(!city)return;
     const p=getParts(city.tz);
+    const card=document.querySelector(`.card[data-id="${id}"]`);
     const hm=document.querySelector(`[data-id="${id}-hm"]`);
     const s =document.querySelector(`[data-id="${id}-s"]`);
+    const dst=document.querySelector(`[data-id="${id}-dst"]`);
     const r3=document.querySelector(`[data-id="${id}-r3"]`);
+    if(card)card.classList.toggle('is-dst',p.dst);
     if(hm)hm.textContent=p.timeStr;
     if(s) s.textContent=`:${p.secStr}`;
+    if(dst)dst.hidden=!p.dst;
     if(r3)r3.textContent=`${p.dateStr} · ${p.tzAbbr}`;
   });
 }
@@ -887,6 +959,7 @@ function resetToNow(){
   const targetDeg=bzUtcHours(Date.now())*15;
   applyTX('quick');
   updateLabels();
+  bzSyncSlots();
   bzAnimateTo(targetDeg);
   bzAnimateTo2(((-targetDeg)%360+360)%360);
   updateWallClocks();
@@ -916,6 +989,7 @@ function dragMove(e){
   if(bzAnim2){cancelAnimationFrame(bzAnim2);bzAnim2=null;}
   applyTX('instant');
   updateLabels();
+  bzSyncSlots();
   bzUpdate(true);
   bzUpdate2(true);
   updateWallClocks();
@@ -1012,12 +1086,14 @@ function renderSearch(){
   const q=document.getElementById('sinp').value.trim().toLowerCase();
   const el=document.getElementById('sres');
   const bar=document.getElementById('sregbar');
+  const qDst=(q==='dst'||q==='서머타임'||q==='서머');
   const matchedAll=DB.filter(c=>!cities.includes(c.id)&&(
     !q||
     c.name.toLowerCase().includes(q)||
     c.en.toLowerCase().includes(q)||
     c.country.toLowerCase().includes(q)||
-    c.region.toLowerCase().includes(q)
+    c.region.toLowerCase().includes(q)||
+    (qDst&&isDST(c.tz))
   ));
 
   const regCounts=new Map();
@@ -1060,7 +1136,10 @@ function renderSearch(){
           <div class="sname">${c.name} <span style="font-size:10px;color:var(--dim)">${c.en}</span></div>
           <div class="scountry">${c.country}</div>
         </div>
-        <span class="stime">${p.timeStr}</span>
+        <div class="smeta">
+          ${p.dst?`<span class="dst-badge dst-badge-sm" title="서머타임(DST) 적용 중">${DST_ICON}DST</span>`:''}
+          <span class="stime">${p.timeStr}</span>
+        </div>
       </div>`;
     }).join('');
   });
@@ -1108,19 +1187,6 @@ let bzRenderedDeg2=null;
 let bzDragSt2=null;
 let bzAnim2=null;
 
-function tzOffsetMin(ts,tz){
-  const fmt=new Intl.DateTimeFormat('en-US',{
-    timeZone:tz,hour12:false,
-    year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit'
-  });
-  const p={};
-  fmt.formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);
-  let h=parseInt(p.hour,10);if(h===24)h=0;
-  const localUtc=Date.UTC(+p.year,+p.month-1,+p.day,h,+p.minute);
-  return Math.round((localUtc-ts)/60000);
-}
-
 function bzLiveOffset(tz,ts=selTime()){
   let off=Math.round(tzOffsetMin(ts,tz)/60);
   if(off>12)off-=24;
@@ -1133,19 +1199,37 @@ function getBezelSlots(ts=selTime()){
   cities.forEach(id=>{
     const c=DB.find(x=>x.id===id);if(!c)return;
     const off=bzLiveOffset(c.tz,ts);
-    if(!map.has(off))map.set(off,{offset:off,name:c.en,sel:true});
+    if(!map.has(off))map.set(off,{offset:off,name:c.en,sel:true,dst:isDST(c.tz,ts)});
   });
   BZ_CITIES.forEach(d=>{
     const off=bzLiveOffset(d.tz,ts);
-    if(!map.has(off))map.set(off,{offset:off,name:d.name,sel:false});
+    if(!map.has(off))map.set(off,{offset:off,name:d.name,sel:false,dst:isDST(d.tz,ts)});
   });
   for(let off=-11;off<=12;off++){
     if(!map.has(off)){
       const fb=BZ_FALLBACK[String(off)]||(off>=0?`UTC+${off}`:`UTC${off}`);
-      map.set(off,{offset:off,name:fb,sel:false});
+      map.set(off,{offset:off,name:fb,sel:false,dst:false});
     }
   }
   return Array.from(map.values()).sort((a,b)=>a.offset-b.offset);
+}
+
+let bzSlotsBucket=null;
+let bzSlotsSig='';
+function bzSlotsSignature(slots){
+  return slots.map(s=>`${s.offset}:${s.name}:${s.sel?1:0}:${s.dst?1:0}`).join('|');
+}
+function bzSyncSlots(ts=selTime()){
+  if(bzDragSt||bzDragSt2)return;
+  const bucket=Math.floor(ts/60000);
+  if(bucket===bzSlotsBucket)return;
+  bzSlotsBucket=bucket;
+  const sig=bzSlotsSignature(getBezelSlots(ts));
+  if(sig!==bzSlotsSig){
+    bzSlotsSig=sig;
+    buildBezelSVG();
+    buildBezelSVG2();
+  }
 }
 
 function bzUtcHours(ts=selTime()){
@@ -1162,7 +1246,10 @@ function bzPt(angleDeg,r){
 function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
   const RC=256,RBO=243,RBI=195,RCL=219;
   const RFC=188,RSO=188,RNM=164;
-  const slots=getBezelSlots(selTime());
+  const ts=selTime();
+  const slots=getBezelSlots(ts);
+  bzSlotsSig=bzSlotsSignature(slots);
+  bzSlotsBucket=Math.floor(ts/60000);
 
   let h=`<defs>
     <linearGradient id="${idPrefix}-steel" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1213,12 +1300,21 @@ function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
     const fs=c.name.length>11?9.5:(sel?11:10.5);
 
     h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${tc}" stroke-width="${sw}"/>`;
-    h+=`<text class="${cityCls}" data-offset="${c.offset}"
-      x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
-      text-anchor="middle" dominant-baseline="middle"
-      font-size="${fs}" font-weight="${sel?'700':'600'}"
-      font-family="Arial,sans-serif" fill="${fc}"
-      transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})">${c.name}</text>`;
+    if(c.dst){
+      h+=`<text class="${cityCls}" data-offset="${c.offset}"
+        x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
+        text-anchor="middle" dominant-baseline="middle"
+        font-size="${fs}" font-weight="${sel?'700':'600'}"
+        font-family="Arial,sans-serif" fill="${fc}"
+        transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})"><title>${c.name} · 서머타임(DST) 적용 중</title><tspan x="${p.x.toFixed(2)}" dy="-4.5">${c.name}</tspan><tspan x="${p.x.toFixed(2)}" dy="10.5" font-size="7.5" font-weight="700" fill="#ffad42" letter-spacing="0.6">DST</tspan></text>`;
+    }else{
+      h+=`<text class="${cityCls}" data-offset="${c.offset}"
+        x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
+        text-anchor="middle" dominant-baseline="middle"
+        font-size="${fs}" font-weight="${sel?'700':'600'}"
+        font-family="Arial,sans-serif" fill="${fc}"
+        transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})">${c.name}</text>`;
+    }
   });
   h+=`</g>`;
 
@@ -1418,6 +1514,7 @@ function bzDragEnd(){
   document.removeEventListener('mouseup',bzDragEnd);
   document.removeEventListener('touchmove',bzDragMove);
   document.removeEventListener('touchend',bzDragEnd);
+  bzSyncSlots();
 }
 
 function bzDragStart2(e){
@@ -1454,6 +1551,7 @@ function bzDragEnd2(){
   document.removeEventListener('mouseup',bzDragEnd2);
   document.removeEventListener('touchmove',bzDragMove2);
   document.removeEventListener('touchend',bzDragEnd2);
+  bzSyncSlots();
 }
 
 function initBezel(){
@@ -1645,9 +1743,12 @@ function renderWallClocks(){
     }).join('');
   }
 
-  el.innerHTML=nodes.map(n=>`<div class="wclock" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
+  el.innerHTML=nodes.map(n=>`<div class="wclock" id="wc-wrap-${n.c.id}" style="left:${n.x.toFixed(1)}px;top:${n.y.toFixed(1)}px" title="${n.c.name} (${n.c.en})">
     ${buildWallClockSVG(n.c.id,D)}
-    <div class="wclock-lbl">${n.c.en}</div>
+    <div class="wclock-lbl">
+      <span>${n.c.en}</span>
+      <span class="dst-badge dst-badge-wall" id="wc-dst-${n.c.id}" title="서머타임(DST) 적용 중" hidden>${DST_ICON}DST</span>
+    </div>
     <div class="wclock-dt">
       <div class="wclock-date" id="wc-d-${n.c.id}"></div>
       <div class="wclock-time" id="wc-t-${n.c.id}"></div>
@@ -1669,11 +1770,18 @@ function updateWallClocks(){
     const ss=document.getElementById(`wc-s-${c.id}`);
     const sd=document.getElementById(`wc-d-${c.id}`);
     const st=document.getElementById(`wc-t-${c.id}`);
+    const sw=document.getElementById(`wc-wrap-${c.id}`);
+    const sdst=document.getElementById(`wc-dst-${c.id}`);
     if(sh)sh.setAttribute('transform',`rotate(${hDeg.toFixed(2)})`);
     if(sm)sm.setAttribute('transform',`rotate(${mDeg.toFixed(2)})`);
     if(ss)ss.setAttribute('transform',`rotate(${sDeg.toFixed(2)})`);
     if(sd)sd.textContent=p.dateStrEn;
     if(st)st.textContent=`${p.timeStr}:${p.secStr}`;
+    if(sw){
+      sw.classList.toggle('is-dst',p.dst);
+      sw.title=p.dst?`${c.name} (${c.en}) · 서머타임(DST) 적용 중`:`${c.name} (${c.en})`;
+    }
+    if(sdst)sdst.hidden=!p.dst;
   });
 }
 
