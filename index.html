@@ -116,6 +116,11 @@ body{
   border-radius:10px;
   line-height:1.25;
 }
+#wc-wrap-seoul .wclock-lbl{
+  color:#0e6b53;
+  background:rgba(234,249,243,.92);
+  border:1px solid rgba(14,107,83,.32);
+}
 .wclock-dst{
   position:relative;
   top:-0.48em;
@@ -164,6 +169,26 @@ body{
 }
 .dhandle:hover{opacity:.9}
 .dhandle:active{cursor:grabbing}
+
+/* seoul slide distinct colour */
+.card[data-id="seoul"]{
+  --c-day:   #daf3ea;
+  --c-night: #4d7d74;
+  --c-day-t: #165244;
+  --c-nit-t: #f0fbf8;
+  border-color:rgba(29,126,102,.32);
+}
+.card[data-id="seoul"] .dhandle{
+  background:#eaf6f2;
+  color:#3c7566;
+}
+.card[data-id="seoul"] .cleft{
+  background:linear-gradient(180deg,#f2fbf8 0%,#e7f5ef 100%);
+  box-shadow:inset 3px 0 0 #1e886c;
+}
+.card[data-id="seoul"] .cname{color:#125444}
+.card[data-id="seoul"] .tc.day .ttick{background:rgba(22,82,68,.28)}
+.card[data-id="seoul"] .tc.night .ttick{background:rgba(240,251,248,.42)}
 
 /* drag states */
 .card.dragging{opacity:.35;box-shadow:none}
@@ -1292,24 +1317,25 @@ function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
     const p=bzPt(ang,RCL);
     const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+7);
     const sel=c.sel;
-    const fc=sel?'#ffd452':'#e8f2fc';
-    const tc=sel?'#ffd452':'#9cb9d6';
-    const sw=sel?2:1.2;
-    const fs=c.name.length>13?8.5:(c.name.length>10?9.5:(sel?10.5:10));
+    const isSeoul=c.name==='Seoul';
+    const fc=isSeoul?'#ff6b6b':(sel?'#ffd452':'#e8f2fc');
+    const tc=isSeoul?'#ff6b6b':(sel?'#ffd452':'#9cb9d6');
+    const sw=(isSeoul||sel)?2:1.2;
+    const fs=c.name.length>13?8.5:(c.name.length>10?9.5:((isSeoul||sel)?10.5:10));
 
     h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${tc}" stroke-width="${sw}"/>`;
     if(c.dst){
       h+=`<text class="${cityCls}" data-offset="${c.offset}"
         x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
         text-anchor="middle" dominant-baseline="middle"
-        font-size="${fs}" font-weight="${sel?'700':'600'}"
+        font-size="${fs}" font-weight="${(isSeoul||sel)?'700':'600'}"
         font-family="Arial,sans-serif" fill="${fc}"
         transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})"><title>${c.name} · 서머타임(DST) 적용 중</title><tspan x="${p.x.toFixed(2)}" dy="-5.8">${c.name}</tspan><tspan x="${p.x.toFixed(2)}" dy="13" font-size="9" font-weight="700" fill="#ffad42" letter-spacing="0.6">DST</tspan></text>`;
     }else{
       h+=`<text class="${cityCls}" data-offset="${c.offset}"
         x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
         text-anchor="middle" dominant-baseline="middle"
-        font-size="${fs}" font-weight="${sel?'700':'600'}"
+        font-size="${fs}" font-weight="${(isSeoul||sel)?'700':'600'}"
         font-family="Arial,sans-serif" fill="${fc}"
         transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})">${c.name}</text>`;
     }
@@ -1357,7 +1383,7 @@ function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
   }
 
   /* center time readout + subtle sapphire glass sheen */
-  h+=`<text x="0" y="-22" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#4b7396" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
+  h+=`<text x="0" y="-22" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#c93b3b" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
   h+=`<text id="${lblId}" x="0" y="4" text-anchor="middle" dominant-baseline="middle" font-size="24" font-weight="700" fill="#153552" font-family="Arial,sans-serif" letter-spacing="1.4" style="font-variant-numeric:tabular-nums">00:00:00</text>`;
   h+=`<text x="0" y="28" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6a8eae" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
   h+=`<path d="M -100,-63 A 119,119 0 0,1 74,-93 C 28,-49 -39,-30 -100,-63 Z" fill="url(#${idPrefix}-glass)" opacity="0.45" pointer-events="none"/>`;
