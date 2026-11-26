@@ -24,6 +24,10 @@
   --acc2:    #1580cc;
   --orange:  #d05808;
   --orng-gl: rgba(208,88,8,.7);
+  --sld-track:#d6e7f5;
+  --btn-bg:  #f4f8fc;
+  --btn-bd:  rgba(30,80,130,.20);
+  --wall-bg: #ffffff;
 
   /* ── TAPE COLOURS (pastel day / night) ── */
   --c-day:   #dcf0fc;   /* bright airy pastel sky blue */
@@ -56,15 +60,50 @@ body{
 .btn-now:hover{background:var(--acc2)}
 .hdr-actions{display:flex;align-items:center;gap:8px}
 .btn-link{
-  background:#fff;color:var(--accent);border:1px solid rgba(18,96,160,.3);
+  background:var(--btn-bg);color:var(--acc2);border:1px solid var(--btn-bd);
   padding:5px 14px;border-radius:20px;text-decoration:none;
   font-size:12px;font-weight:700;transition:all .2s;
 }
-.btn-link:hover{background:#f0f6ff;border-color:var(--accent)}
+.btn-link:hover{background:var(--lpanel);border-color:var(--acc2)}
+.theme-wrap{position:relative}
+.btn-theme{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--btn-bg);color:var(--text);
+  border:1px solid var(--btn-bd);
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  font-size:12px;font-weight:700;transition:all .15s;
+}
+.btn-theme:hover{border-color:var(--acc2)}
+.theme-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(128,128,128,.35);
+}
+.theme-menu{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:250;
+  min-width:176px;max-height:440px;overflow-y:auto;
+  background:var(--hdr);border:1px solid var(--border);
+  border-radius:12px;padding:6px;
+  box-shadow:0 12px 32px rgba(0,0,0,.22);
+}
+.theme-menu.hidden{display:none}
+.theme-opt{
+  width:100%;display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border:none;border-radius:8px;
+  background:transparent;color:var(--text);
+  font-size:13px;font-weight:500;cursor:pointer;text-align:left;
+  transition:background .12s;
+}
+.theme-opt:hover{background:var(--lpanel)}
+.theme-opt.active{font-weight:700}
+.theme-opt-dot{
+  width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(128,128,128,.35);
+}
+.theme-opt-chk{margin-left:auto;color:var(--acc2);font-weight:700}
 
 /* ── NEWSROOM WALL CLOCKS ── */
 .wallsec{
-  background:#ffffff;
+  background:var(--wall-bg);
   border-bottom:1px solid var(--border);
   box-shadow:0 2px 10px rgba(30,80,130,.05);
   padding:0;
@@ -337,21 +376,21 @@ body{
 }
 .badd{
   width:27px;height:27px;flex-shrink:0;
-  background:#fff;border:2px solid var(--accent);
-  color:var(--accent);border-radius:50%;cursor:pointer;
+  background:var(--card);border:2px solid var(--acc2);
+  color:var(--acc2);border-radius:50%;cursor:pointer;
   font-size:20px;line-height:1;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 1px 5px rgba(30,80,130,.14);
   transition:all .15s;
 }
-.badd:hover{background:var(--accent);color:#fff}
+.badd:hover{background:var(--accent);border-color:var(--accent);color:#fff}
 .addlbl{font-size:12px;color:var(--dim);cursor:pointer}
-.addlbl:hover{color:var(--accent)}
+.addlbl:hover{color:var(--acc2)}
 
 /* ── SLIDER ── */
 .sldsec{
   padding:8px 18px 11px;
-  background:#fff;
+  background:var(--hdr);
   border-top:1px solid var(--border);
   border-bottom:1px solid var(--border);
   box-shadow:0 -1px 6px rgba(30,80,130,.05);
@@ -362,7 +401,7 @@ body{
 input[type=range]{
   -webkit-appearance:none;appearance:none;
   flex:1;height:5px;border-radius:3px;
-  background:#d6e7f5;outline:none;cursor:pointer;
+  background:var(--sld-track);outline:none;cursor:pointer;
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;
@@ -395,7 +434,7 @@ input[type=range]::-moz-range-thumb{
 }
 .overlay.hidden{display:none}
 .sbox{
-  background:#fff;border:1px solid var(--border);
+  background:var(--hdr);border:1px solid var(--border);
   border-radius:12px;width:min(92vw,480px);max-height:min(82vh,580px);
   display:flex;flex-direction:column;overflow:hidden;
   box-shadow:0 24px 60px rgba(15,40,65,.2);
@@ -413,39 +452,67 @@ input[type=range]::-moz-range-thumb{
 .scls:hover{color:var(--text)}
 .sregbar{
   display:flex;flex-wrap:wrap;gap:5px;
-  padding:8px 12px;background:#f7fafd;
+  padding:8px 12px;background:var(--lpanel);
   border-bottom:1px solid var(--border);
 }
 .sregbtn{
-  border:1px solid rgba(30,80,130,.18);background:#fff;color:var(--dim);
+  border:1px solid var(--btn-bd);background:var(--card);color:var(--dim);
   border-radius:14px;padding:3px 9px;font-size:11px;font-weight:600;
   cursor:pointer;transition:all .12s;white-space:nowrap;
 }
-.sregbtn:hover{border-color:var(--accent);color:var(--accent)}
+.sregbtn:hover{border-color:var(--acc2);color:var(--acc2)}
 .sregbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .sres{overflow-y:auto;flex:1}
 .sgrp{
   position:sticky;top:0;z-index:2;
   display:flex;align-items:center;justify-content:space-between;
-  padding:6px 15px;background:#eef4fa;
-  border-top:1px solid rgba(30,80,130,.08);
-  border-bottom:1px solid rgba(30,80,130,.1);
-  font-size:11px;font-weight:700;color:#2b4c6b;letter-spacing:.2px;
+  padding:6px 15px;background:var(--lpanel);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:700;color:var(--text);letter-spacing:.2px;
 }
 .sgrpcnt{font-size:10px;font-weight:600;color:var(--dim)}
 .sempty{padding:20px;text-align:center;color:var(--dim);font-size:12px}
 .sitem{
   display:flex;align-items:center;gap:10px;
   padding:9px 15px;cursor:pointer;
-  border-bottom:1px solid rgba(30,80,130,.06);transition:background .1s;
+  border-bottom:1px solid var(--border);transition:background .1s;
 }
-.sitem:hover{background:#f0f6ff}
+.sitem:hover{background:var(--lpanel)}
 .sflag{font-size:19px}
 .sinf{flex:1}
 .sname{font-size:13px;font-weight:600}
 .scountry{font-size:10px;color:var(--dim)}
 .smeta{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .stime{font-size:14px;font-weight:700;color:var(--acc2)}
+
+/* ── DARK THEME OVERRIDES ── */
+body.theme-dark .wclock-lbl,
+body.theme-dark .wclock-dt{background:rgba(16,22,30,.86)}
+body.theme-dark .wclock-lbl{color:var(--text)}
+body.theme-dark .wclock-time{color:var(--acc2)}
+body.theme-dark #wc-wrap-seoul .wclock-lbl{
+  color:#63e6be;background:rgba(12,38,32,.9);border-color:rgba(99,230,190,.38);
+}
+body.theme-dark .card[data-id="seoul"]{
+  --c-day:#d6efe6;--c-night:#1d4a41;--c-day-t:#11382d;--c-nit-t:#eafaf4;
+  border-color:rgba(99,230,190,.32);
+}
+body.theme-dark .card[data-id="seoul"] .dhandle{background:#122923;color:#63e6be}
+body.theme-dark .card[data-id="seoul"] .cleft{
+  background:linear-gradient(180deg,#152e27 0%,#10241f 100%);
+  box-shadow:inset 3px 0 0 #38b896;
+}
+body.theme-dark .card[data-id="seoul"] .cname{color:#63e6be}
+body.theme-dark .card.is-dst .cleft{
+  background:linear-gradient(180deg,#2a2316 0%,#221c12 100%);
+  box-shadow:inset 3px 0 0 #e5a93b;
+}
+body.theme-dark .dst-badge{
+  background:rgba(245,180,50,.18);border-color:rgba(245,180,50,.45);color:#ffd166;
+}
+body.theme-dark .tc.day .ttick{background:rgba(20,40,60,.25)}
+body.theme-dark .tc.night .ttick{background:rgba(240,248,255,.32)}
 </style>
 </head>
 <body>
@@ -454,6 +521,13 @@ input[type=range]::-moz-range-thumb{
   <div class="logo">🌍 <em>World</em> Time</div>
   <div class="hdr-actions">
     <a class="btn-link" href="wall.html">뉴스룸 벽시계</a>
+    <div class="theme-wrap" id="themeWrap">
+      <button type="button" class="btn-theme" id="btnTheme" onclick="toggleThemeMenu(event)" aria-haspopup="true" aria-expanded="false" title="색상 테마 변경">
+        <span class="theme-dot" id="themeDot"></span>
+        <span>테마</span>
+      </button>
+      <div class="theme-menu hidden" id="themeMenu" role="menu"></div>
+    </div>
     <button class="btn-now" onclick="resetToNow()">현재 시각</button>
   </div>
 </div>
@@ -487,13 +561,13 @@ input[type=range]::-moz-range-thumb{
   <div class="bzsec" style="flex:1;min-width:300px;">
     <div class="bztitle">WORLD TIMER BEZEL I — City Ring</div>
     <div class="bzwrap">
-      <svg id="bzSVG" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="bzSVG" viewBox="-266 -266 532 532" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
   </div>
   <div class="bzsec" style="flex:1;min-width:300px;">
     <div class="bztitle">WORLD TIMER BEZEL II — Dial</div>
     <div class="bzwrap">
-      <svg id="bzSVG2" viewBox="-260 -260 520 520" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="bzSVG2" viewBox="-266 -266 532 532" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
   </div>
 </div>
@@ -705,9 +779,561 @@ let drag      = null;
 let ticker    = null;
 
 /* ══════════════════════════════════
-   LOCALSTORAGE
+   LOCALSTORAGE & THEMES
 ══════════════════════════════════ */
 const STORAGE_KEY = 'worldtime_cities';
+const THEME_STORAGE_KEY = 'worldtime_theme';
+
+const WATCH_THEMES = [
+  {
+    id:'classic_navy',
+    displayName:'클래식 네이비',
+    isDark:false,
+    previewColor:'#2b466b',
+    pageBackground:'#eef3f9',
+    topBarBackground:'#ffffff',
+    dividerColor:'rgba(30,80,130,.122)',
+    titleAccentColor:'#1580cc',
+    textPrimaryColor:'#18303f',
+    textDimColor:'#5a7a90',
+    primaryButtonColor:'#1260a0',
+    themeButtonContainerColor:'#f4f8fc',
+    themeButtonBorderColor:'rgba(30,80,130,.20)',
+    sliderActiveColor:'#d05808',
+    sliderInactiveColor:'#d6e7f5',
+    tapeDay:'#dcf0fc',
+    tapeNight:'#6282aa',
+    tapeDayText:'#1f4b70',
+    tapeNightText:'#f2f8ff',
+    steelStops:['#eef3f8','#9aa8b8','#f6f9fc','#6e7e90','#d2dce6'],
+    bezelOuterColor:'#364d6d',
+    bezelInnerColor:'#24354c',
+    bezelBorderColor:'#5c789a',
+    bezelTrackGuideColor:'rgba(232,242,252,.118)',
+    bezelInnerDiskColor:'#1b2a3d',
+    defaultCityTextColor:'#f0f6fc',
+    defaultCityDotColor:'#dce8f5',
+    defaultCityTickColor:'#9cb9d6',
+    seoulColor:'#ff6b6b',
+    londonColor:'#ffd452',
+    dstColor:'#56ccf2',
+    dayHalfColor:'#eef6fd',
+    nightHalfColor:'#4c6b92',
+    dayMajorNumColor:'#133454',
+    dayMinorTickColor:'#7da8cc',
+    nightMajorNumColor:'#f4f8ff',
+    nightMinorTickColor:'rgba(225,240,255,.549)',
+    centerFaceStops:['#ffffff','#e8f1fa','#d4e4f3'],
+    centerCityColor:'#c93b3b',
+    centerTimeColor:'#153552',
+    centerUtcColor:'#6a8eae',
+    batonCardinalColor:'#3a5470',
+    batonMinorColor:'#7d96b0',
+  },
+  {
+    id:'pilot_dark',
+    displayName:'파일럿 다크',
+    isDark:true,
+    previewColor:'#1d242e',
+    pageBackground:'#10141a',
+    topBarBackground:'#171d26',
+    dividerColor:'rgba(255,255,255,.149)',
+    titleAccentColor:'#6cb4f5',
+    textPrimaryColor:'#f0f4fa',
+    textDimColor:'#8c9bb0',
+    primaryButtonColor:'#2667a8',
+    themeButtonContainerColor:'#222a36',
+    themeButtonBorderColor:'rgba(255,255,255,.22)',
+    sliderActiveColor:'#f08c2e',
+    sliderInactiveColor:'#2a3442',
+    tapeDay:'#e8eef5',
+    tapeNight:'#1d242e',
+    tapeDayText:'#141c26',
+    tapeNightText:'#f4f8fc',
+    steelStops:['#d4dce4','#7b8694','#e4ebf2','#535d69','#b3bdc8'],
+    bezelOuterColor:'#20262e',
+    bezelInnerColor:'#101318',
+    bezelBorderColor:'#556273',
+    bezelTrackGuideColor:'rgba(255,255,255,.118)',
+    bezelInnerDiskColor:'#0e1217',
+    defaultCityTextColor:'#f0f4fa',
+    defaultCityDotColor:'#d2dce8',
+    defaultCityTickColor:'#8796aa',
+    seoulColor:'#ff6b6b',
+    londonColor:'#ffd452',
+    dstColor:'#4fd1c5',
+    dayHalfColor:'#e8eef5',
+    nightHalfColor:'#1d242e',
+    dayMajorNumColor:'#141c26',
+    dayMinorTickColor:'#6b7b8e',
+    nightMajorNumColor:'#f4f8fc',
+    nightMinorTickColor:'rgba(208,220,235,.549)',
+    centerFaceStops:['#232a35','#1a2029','#12171e'],
+    centerCityColor:'#ff7a7a',
+    centerTimeColor:'#f4f8fc',
+    centerUtcColor:'#93a5bc',
+    batonCardinalColor:'#d5e0ec',
+    batonMinorColor:'#6c7a8c',
+  },
+  {
+    id:'emerald_gmt',
+    displayName:'에메랄드',
+    isDark:false,
+    previewColor:'#1a5342',
+    pageBackground:'#eef5f1',
+    topBarBackground:'#ffffff',
+    dividerColor:'rgba(26,83,66,.122)',
+    titleAccentColor:'#1e886c',
+    textPrimaryColor:'#15382e',
+    textDimColor:'#567c70',
+    primaryButtonColor:'#1e886c',
+    themeButtonContainerColor:'#f2faf6',
+    themeButtonBorderColor:'rgba(26,83,66,.20)',
+    sliderActiveColor:'#1e886c',
+    sliderInactiveColor:'#d0e7dd',
+    tapeDay:'#f1faf5',
+    tapeNight:'#2e6052',
+    tapeDayText:'#11382d',
+    tapeNightText:'#f2fcf8',
+    steelStops:['#f0f5f2','#95a89f','#f8fcfa','#6a7d74','#d0ddd6'],
+    bezelOuterColor:'#1a5342',
+    bezelInnerColor:'#0f3228',
+    bezelBorderColor:'#4f8c79',
+    bezelTrackGuideColor:'rgba(232,255,247,.118)',
+    bezelInnerDiskColor:'#0c2920',
+    defaultCityTextColor:'#effaf5',
+    defaultCityDotColor:'#d5f0e5',
+    defaultCityTickColor:'#8bc4b0',
+    seoulColor:'#ff6b6b',
+    londonColor:'#ffd452',
+    dstColor:'#63e6be',
+    dayHalfColor:'#f1faf5',
+    nightHalfColor:'#2e6052',
+    dayMajorNumColor:'#11382d',
+    dayMinorTickColor:'#6fa896',
+    nightMajorNumColor:'#f2fcf8',
+    nightMinorTickColor:'rgba(224,255,243,.549)',
+    centerFaceStops:['#ffffff','#eaf6f0','#d4e9de'],
+    centerCityColor:'#c93b3b',
+    centerTimeColor:'#123c30',
+    centerUtcColor:'#5d8e7f',
+    batonCardinalColor:'#2e6052',
+    batonMinorColor:'#79a395',
+  },
+  {
+    id:'royal_burgundy',
+    displayName:'로열 버건디',
+    isDark:false,
+    previewColor:'#5e2435',
+    pageBackground:'#f6f1ee',
+    topBarBackground:'#ffffff',
+    dividerColor:'rgba(94,36,53,.122)',
+    titleAccentColor:'#9e2a3b',
+    textPrimaryColor:'#341821',
+    textDimColor:'#7d5d66',
+    primaryButtonColor:'#9e2a3b',
+    themeButtonContainerColor:'#fcf7f5',
+    themeButtonBorderColor:'rgba(94,36,53,.20)',
+    sliderActiveColor:'#9e2a3b',
+    sliderInactiveColor:'#ebd9d5',
+    tapeDay:'#fcf4ee',
+    tapeNight:'#6b4554',
+    tapeDayText:'#3d1924',
+    tapeNightText:'#fff6f4',
+    steelStops:['#f8eae0','#c49a82','#fdf5f0','#8f6853','#e6cfc2'],
+    bezelOuterColor:'#5e2435',
+    bezelInnerColor:'#38131e',
+    bezelBorderColor:'#995b6d',
+    bezelTrackGuideColor:'rgba(255,240,244,.118)',
+    bezelInnerDiskColor:'#2e0f18',
+    defaultCityTextColor:'#fcf3f0',
+    defaultCityDotColor:'#f2dcd6',
+    defaultCityTickColor:'#c999a6',
+    seoulColor:'#ff7a7a',
+    londonColor:'#ffe066',
+    dstColor:'#74c0fc',
+    dayHalfColor:'#fcf4ee',
+    nightHalfColor:'#6b4554',
+    dayMajorNumColor:'#3d1924',
+    dayMinorTickColor:'#a97c8c',
+    nightMajorNumColor:'#fff6f4',
+    nightMinorTickColor:'rgba(255,232,239,.549)',
+    centerFaceStops:['#ffffff','#f8efea','#ecddd6'],
+    centerCityColor:'#b8293d',
+    centerTimeColor:'#3d1924',
+    centerUtcColor:'#8a5d6a',
+    batonCardinalColor:'#6b3e4d',
+    batonMinorColor:'#a37b88',
+  },
+  {
+    id:'midnight_gold',
+    displayName:'미드나잇 골드',
+    isDark:true,
+    previewColor:'#d4af37',
+    pageBackground:'#0a0b0e',
+    topBarBackground:'#13151b',
+    dividerColor:'#282b34',
+    titleAccentColor:'#e5c158',
+    textPrimaryColor:'#f3eee3',
+    textDimColor:'#a69f91',
+    primaryButtonColor:'#c9a23f',
+    themeButtonContainerColor:'#1a1d24',
+    themeButtonBorderColor:'#3a3424',
+    sliderActiveColor:'#e5c158',
+    sliderInactiveColor:'#2d2e36',
+    tapeDay:'#f3ece0',
+    tapeNight:'#12141b',
+    tapeDayText:'#241d12',
+    tapeNightText:'#f0dfb2',
+    steelStops:['#5a4e33','#d9be78','#7b6941','#332b1a','#c2a45e'],
+    bezelOuterColor:'#0f1116',
+    bezelInnerColor:'#161920',
+    bezelBorderColor:'#423925',
+    bezelTrackGuideColor:'rgba(217,190,120,.271)',
+    bezelInnerDiskColor:'#1d2028',
+    defaultCityTextColor:'#f5efe0',
+    defaultCityDotColor:'#d6b96e',
+    defaultCityTickColor:'#7b6f50',
+    seoulColor:'#ff7a6b',
+    londonColor:'#ffe074',
+    dstColor:'#5ce1c6',
+    dayHalfColor:'#f3ece0',
+    nightHalfColor:'#12141b',
+    dayMajorNumColor:'#241d12',
+    dayMinorTickColor:'#8c7a5b',
+    nightMajorNumColor:'#f0dfb2',
+    nightMinorTickColor:'#7e7151',
+    centerFaceStops:['#1c1e26','#121419','#0a0b0e'],
+    centerCityColor:'#f8f1e1',
+    centerTimeColor:'#e5c158',
+    centerUtcColor:'#b5aba0',
+    batonCardinalColor:'#e5c158',
+    batonMinorColor:'#7d6b42',
+  },
+  {
+    id:'arctic_silver',
+    displayName:'아틱 실버',
+    isDark:false,
+    previewColor:'#8fb8de',
+    pageBackground:'#eff4f9',
+    topBarBackground:'#f8fbfe',
+    dividerColor:'#d4e0ec',
+    titleAccentColor:'#1f5d99',
+    textPrimaryColor:'#102438',
+    textDimColor:'#587089',
+    primaryButtonColor:'#1f5d99',
+    themeButtonContainerColor:'#e3edf7',
+    themeButtonBorderColor:'#bbd0e4',
+    sliderActiveColor:'#1f5d99',
+    sliderInactiveColor:'#cbd8e6',
+    tapeDay:'#ffffff',
+    tapeNight:'#19324d',
+    tapeDayText:'#122c46',
+    tapeNightText:'#eaf3fc',
+    steelStops:['#c2cfd9','#ffffff','#9eb0c0','#6b7e8f','#e4ecf4'],
+    bezelOuterColor:'#1c3550',
+    bezelInnerColor:'#244363',
+    bezelBorderColor:'#4c7297',
+    bezelTrackGuideColor:'rgba(157,196,232,.314)',
+    bezelInnerDiskColor:'#2c4e73',
+    defaultCityTextColor:'#f4f8fc',
+    defaultCityDotColor:'#aad0f5',
+    defaultCityTickColor:'#6e93b7',
+    seoulColor:'#ff7b7b',
+    londonColor:'#ffde6b',
+    dstColor:'#70eeff',
+    dayHalfColor:'#ffffff',
+    nightHalfColor:'#19324d',
+    dayMajorNumColor:'#122c46',
+    dayMinorTickColor:'#7a94ae',
+    nightMajorNumColor:'#eaf3fc',
+    nightMinorTickColor:'#6d90b3',
+    centerFaceStops:['#ffffff','#e9f1f9','#d6e4f2'],
+    centerCityColor:'#0e253d',
+    centerTimeColor:'#1f5d99',
+    centerUtcColor:'#56718b',
+    batonCardinalColor:'#1f5d99',
+    batonMinorColor:'#8ca8c4',
+  },
+  {
+    id:'desert_bronze',
+    displayName:'데저트 브론즈',
+    isDark:false,
+    previewColor:'#a86b3e',
+    pageBackground:'#f4ede4',
+    topBarBackground:'#faf5ee',
+    dividerColor:'#e1d3c2',
+    titleAccentColor:'#7e4520',
+    textPrimaryColor:'#2b1c12',
+    textDimColor:'#755d4b',
+    primaryButtonColor:'#8b4d24',
+    themeButtonContainerColor:'#ece0d2',
+    themeButtonBorderColor:'#d1bba3',
+    sliderActiveColor:'#8b4d24',
+    sliderInactiveColor:'#d9c7b3',
+    tapeDay:'#faf3ea',
+    tapeNight:'#2a1b12',
+    tapeDayText:'#332014',
+    tapeNightText:'#f5e5d5',
+    steelStops:['#8c5d3b','#e3b68d','#9f6c46','#4d2e1a','#c58e64'],
+    bezelOuterColor:'#2e1e14',
+    bezelInnerColor:'#3b271b',
+    bezelBorderColor:'#7b5439',
+    bezelTrackGuideColor:'rgba(212,162,121,.290)',
+    bezelInnerDiskColor:'#483123',
+    defaultCityTextColor:'#f8ede2',
+    defaultCityDotColor:'#e3b48d',
+    defaultCityTickColor:'#9a7154',
+    seoulColor:'#ff7a66',
+    londonColor:'#ffd86b',
+    dstColor:'#66e0c2',
+    dayHalfColor:'#faf3ea',
+    nightHalfColor:'#2a1b12',
+    dayMajorNumColor:'#332014',
+    dayMinorTickColor:'#997e68',
+    nightMajorNumColor:'#f5e5d5',
+    nightMinorTickColor:'#8e6d55',
+    centerFaceStops:['#fcf7f0','#f2e6d8','#e4d1bc'],
+    centerCityColor:'#2a1b11',
+    centerTimeColor:'#8b4d24',
+    centerUtcColor:'#735a48',
+    batonCardinalColor:'#7e4520',
+    batonMinorColor:'#b3947b',
+  },
+  {
+    id:'ocean_teal',
+    displayName:'오션 딥틸',
+    isDark:true,
+    previewColor:'#1e8e8e',
+    pageBackground:'#08171a',
+    topBarBackground:'#0e2327',
+    dividerColor:'#1b3b40',
+    titleAccentColor:'#4ce0d2',
+    textPrimaryColor:'#e9f7f6',
+    textDimColor:'#8db5b2',
+    primaryButtonColor:'#178d86',
+    themeButtonContainerColor:'#132d32',
+    themeButtonBorderColor:'#254f56',
+    sliderActiveColor:'#4ce0d2',
+    sliderInactiveColor:'#1e3e44',
+    tapeDay:'#eaf7f6',
+    tapeNight:'#0a2226',
+    tapeDayText:'#0b2a2f',
+    tapeNightText:'#dff7f5',
+    steelStops:['#4e6f73','#d5ebeb','#6e9498','#233a3e','#9bbdc0'],
+    bezelOuterColor:'#0a2429',
+    bezelInnerColor:'#0f3036',
+    bezelBorderColor:'#2b6068',
+    bezelTrackGuideColor:'rgba(99,220,210,.290)',
+    bezelInnerDiskColor:'#153d44',
+    defaultCityTextColor:'#e9f8f7',
+    defaultCityDotColor:'#79dfd6',
+    defaultCityTickColor:'#427f84',
+    seoulColor:'#ff7d73',
+    londonColor:'#ffdd67',
+    dstColor:'#7cffae',
+    dayHalfColor:'#eaf7f6',
+    nightHalfColor:'#0a2226',
+    dayMajorNumColor:'#0b2a2f',
+    dayMinorTickColor:'#6d9b9e',
+    nightMajorNumColor:'#dff7f5',
+    nightMinorTickColor:'#48848a',
+    centerFaceStops:['#123338','#0b2226','#071619'],
+    centerCityColor:'#ebf9f8',
+    centerTimeColor:'#4ce0d2',
+    centerUtcColor:'#8db8b5',
+    batonCardinalColor:'#4ce0d2',
+    batonMinorColor:'#447b80',
+  },
+  {
+    id:'carbon_orange',
+    displayName:'카본 오렌지',
+    isDark:true,
+    previewColor:'#ff7324',
+    pageBackground:'#111214',
+    topBarBackground:'#191b1f',
+    dividerColor:'#2c3036',
+    titleAccentColor:'#ff833b',
+    textPrimaryColor:'#f3f4f6',
+    textDimColor:'#9ba1ab',
+    primaryButtonColor:'#e3621a',
+    themeButtonContainerColor:'#21242a',
+    themeButtonBorderColor:'#393e47',
+    sliderActiveColor:'#ff833b',
+    sliderInactiveColor:'#31353d',
+    tapeDay:'#f0f2f5',
+    tapeNight:'#15171c',
+    tapeDayText:'#181a1f',
+    tapeNightText:'#f4f6f8',
+    steelStops:['#484d56','#cbd1da','#646b75','#23262b','#9198a3'],
+    bezelOuterColor:'#14161a',
+    bezelInnerColor:'#1c1f24',
+    bezelBorderColor:'#424752',
+    bezelTrackGuideColor:'rgba(255,138,71,.271)',
+    bezelInnerDiskColor:'#24282e',
+    defaultCityTextColor:'#f1f3f6',
+    defaultCityDotColor:'#ff9654',
+    defaultCityTickColor:'#656c78',
+    seoulColor:'#ff6b6b',
+    londonColor:'#ffd859',
+    dstColor:'#5eead4',
+    dayHalfColor:'#f0f2f5',
+    nightHalfColor:'#15171c',
+    dayMajorNumColor:'#181a1f',
+    dayMinorTickColor:'#7d8490',
+    nightMajorNumColor:'#f4f6f8',
+    nightMinorTickColor:'#6a707c',
+    centerFaceStops:['#21242b','#16181d','#0e1013'],
+    centerCityColor:'#f5f6f8',
+    centerTimeColor:'#ff833b',
+    centerUtcColor:'#9ea4ae',
+    batonCardinalColor:'#ff833b',
+    batonMinorColor:'#666d79',
+  },
+  {
+    id:'sakura_plum',
+    displayName:'사쿠라 로즈',
+    isDark:false,
+    previewColor:'#c86d88',
+    pageBackground:'#f8f1f4',
+    topBarBackground:'#fdf9fa',
+    dividerColor:'#ead7df',
+    titleAccentColor:'#8c3654',
+    textPrimaryColor:'#2d1720',
+    textDimColor:'#7c5966',
+    primaryButtonColor:'#963d5b',
+    themeButtonContainerColor:'#f1e3e9',
+    themeButtonBorderColor:'#dcbeca',
+    sliderActiveColor:'#963d5b',
+    sliderInactiveColor:'#e0cad3',
+    tapeDay:'#fff8fa',
+    tapeNight:'#331925',
+    tapeDayText:'#381a27',
+    tapeNightText:'#fbebf0',
+    steelStops:['#b89da7','#fcf7f9','#a2828f','#5d424d','#e2cfd7'],
+    bezelOuterColor:'#381d29',
+    bezelInnerColor:'#472535',
+    bezelBorderColor:'#825267',
+    bezelTrackGuideColor:'rgba(230,161,186,.290)',
+    bezelInnerDiskColor:'#542e40',
+    defaultCityTextColor:'#fcf3f6',
+    defaultCityDotColor:'#f0acc3',
+    defaultCityTickColor:'#996b7f',
+    seoulColor:'#ff758f',
+    londonColor:'#ffdf73',
+    dstColor:'#6ee7d8',
+    dayHalfColor:'#fff8fa',
+    nightHalfColor:'#331925',
+    dayMajorNumColor:'#381a27',
+    dayMinorTickColor:'#a17e8b',
+    nightMajorNumColor:'#fbebf0',
+    nightMinorTickColor:'#96657a',
+    centerFaceStops:['#fffafc','#f7eaf0','#ebd4de'],
+    centerCityColor:'#2e1620',
+    centerTimeColor:'#8c3654',
+    centerUtcColor:'#7a5665',
+    batonCardinalColor:'#8c3654',
+    batonMinorColor:'#b592a0',
+  },
+];
+
+let activeTheme = WATCH_THEMES[0];
+
+function getThemeById(id){
+  return WATCH_THEMES.find(t=>t.id===id) || WATCH_THEMES[0];
+}
+
+function hexToRgba(hex,alpha){
+  if(!hex||hex[0]!=='#'||hex.length!==7)return hex;
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function applyTheme(id, persist=true){
+  const t=getThemeById(id);
+  activeTheme=t;
+  const root=document.documentElement;
+  if(root&&root.style&&root.style.setProperty){
+    root.style.setProperty('--page',t.pageBackground);
+    root.style.setProperty('--hdr',t.topBarBackground);
+    root.style.setProperty('--card',t.topBarBackground);
+    root.style.setProperty('--lpanel',t.themeButtonContainerColor);
+    root.style.setProperty('--text',t.textPrimaryColor);
+    root.style.setProperty('--dim',t.textDimColor);
+    root.style.setProperty('--border',t.dividerColor);
+    root.style.setProperty('--shadow',t.isDark?'0 2px 14px rgba(0,0,0,.38)':'0 2px 14px rgba(30,80,130,.09)');
+    root.style.setProperty('--accent',t.primaryButtonColor);
+    root.style.setProperty('--acc2',t.titleAccentColor);
+    root.style.setProperty('--orange',t.sliderActiveColor);
+    root.style.setProperty('--orng-gl',hexToRgba(t.sliderActiveColor,0.7));
+    root.style.setProperty('--sld-track',t.sliderInactiveColor);
+    root.style.setProperty('--c-day',t.tapeDay);
+    root.style.setProperty('--c-night',t.tapeNight);
+    root.style.setProperty('--c-day-t',t.tapeDayText);
+    root.style.setProperty('--c-nit-t',t.tapeNightText);
+    root.style.setProperty('--btn-bg',t.themeButtonContainerColor);
+    root.style.setProperty('--btn-bd',t.themeButtonBorderColor);
+    root.style.setProperty('--wall-bg',t.topBarBackground);
+  }
+  if(document.body&&document.body.classList){
+    document.body.classList.toggle('theme-dark',t.isDark);
+  }
+  const dot=document.getElementById('themeDot');
+  if(dot)dot.style.background=t.previewColor;
+  if(persist){
+    try{localStorage.setItem(THEME_STORAGE_KEY,t.id);}catch(e){}
+  }
+  renderThemeMenu();
+  if(typeof mapTopo!=='undefined'&&mapTopo)drawWallMap();
+  if(typeof buildBezelSVG==='function'){
+    buildBezelSVG();
+    buildBezelSVG2();
+  }
+}
+
+function loadThemeFromStorage(){
+  let saved=null;
+  try{saved=localStorage.getItem(THEME_STORAGE_KEY);}catch(e){}
+  applyTheme(saved,false);
+}
+
+function renderThemeMenu(){
+  const menu=document.getElementById('themeMenu');
+  if(!menu)return;
+  menu.innerHTML=WATCH_THEMES.map(t=>{
+    const active=t.id===activeTheme.id;
+    return `<button type="button" class="theme-opt${active?' active':''}" role="menuitemradio" aria-checked="${active}" onclick="selectTheme('${t.id}')">
+      <span class="theme-opt-dot" style="background:${t.previewColor}"></span>
+      <span>${t.displayName}</span>
+      ${active?'<span class="theme-opt-chk">✓</span>':''}
+    </button>`;
+  }).join('');
+}
+
+function toggleThemeMenu(e){
+  if(e)e.stopPropagation();
+  const menu=document.getElementById('themeMenu');
+  const btn=document.getElementById('btnTheme');
+  if(!menu)return;
+  const open=menu.classList.contains('hidden');
+  if(open)renderThemeMenu();
+  menu.classList.toggle('hidden',!open);
+  if(btn)btn.setAttribute('aria-expanded',String(open));
+}
+
+function closeThemeMenu(){
+  const menu=document.getElementById('themeMenu');
+  const btn=document.getElementById('btnTheme');
+  if(menu)menu.classList.add('hidden');
+  if(btn)btn.setAttribute('aria-expanded','false');
+}
+
+function selectTheme(id){
+  closeThemeMenu();
+  applyTheme(id,true);
+}
 
 function saveCitiesToStorage(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cities));
@@ -1168,7 +1794,11 @@ function renderSearch(){
   });
   el.innerHTML=html;
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSearch();closeThemeMenu();}});
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('themeWrap');
+  if(wrap&&wrap.contains&&!wrap.contains(e.target))closeThemeMenu();
+});
 
 /* ══════════════════════════════════
    BEZEL WORLD TIMER
@@ -1266,87 +1896,120 @@ function bzPt(angleDeg,r){
   return{x:Math.cos(rad)*r,y:Math.sin(rad)*r};
 }
 
+const BZ_FONT_COND="'Arial Narrow','Roboto Condensed','Helvetica Neue',Arial,sans-serif";
+const BZ_FONT_SANS="Arial,'Helvetica Neue',sans-serif";
+let bzMeasureCtx=null;
+function bzMeasureText(text,fontSize,fontFamily,letterSpacingEm=0.04){
+  if(!bzMeasureCtx&&typeof document!=='undefined'&&document.createElement){
+    const cv=document.createElement('canvas');
+    if(cv&&cv.getContext)bzMeasureCtx=cv.getContext('2d');
+  }
+  if(bzMeasureCtx){
+    bzMeasureCtx.font=`700 ${fontSize}px ${fontFamily}`;
+    const w=bzMeasureCtx.measureText(text).width;
+    return w+Math.max(0,text.length-1)*fontSize*letterSpacingEm;
+  }
+  return text.length*fontSize*(0.56+letterSpacingEm);
+}
+
 function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
-  const RC=256,RBO=246,RBI=172,RCL=212;
-  const RFC=166,RSO=166,RNM=143;
+  const RC=258,RBO=250,RBI=166,R_OUT=226,R_IN=189;
+  const RFC=162,RSO=162,RNM=137;
+  const t=activeTheme;
   const ts=selTime();
   const slots=getBezelSlots(ts);
   bzSlotsSig=bzSlotsSignature(slots);
   bzSlotsBucket=Math.floor(ts/60000);
 
+  let arcDefs='';
+  const arcMeta=slots.map((c,idx)=>{
+    const rawAng=((c.offset*15)%360+360)%360;
+    const isOuterTrack=c.offset%2===0;
+    const trackR=isOuterTrack?R_OUT:R_IN;
+    const oppositeR=isOuterTrack?R_IN:R_OUT;
+    const useClockwise=rawAng<=90||rawAng>=270;
+    const a0=useClockwise?rawAng-60:rawAng+60;
+    const a1=useClockwise?rawAng+60:rawAng-60;
+    const p0=bzPt(a0,trackR),p1=bzPt(a1,trackR);
+    const sweep=useClockwise?1:0;
+    arcDefs+=`<path id="${idPrefix}-arc-${idx}" d="M ${p0.x.toFixed(2)},${p0.y.toFixed(2)} A ${trackR},${trackR} 0 0,${sweep} ${p1.x.toFixed(2)},${p1.y.toFixed(2)}"/>`;
+    return{c,idx,rawAng,isOuterTrack,trackR,oppositeR};
+  });
+
   let h=`<defs>
     <linearGradient id="${idPrefix}-steel" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#eef3f8"/>
-      <stop offset="26%" stop-color="#9aa8b8"/>
-      <stop offset="52%" stop-color="#f6f9fc"/>
-      <stop offset="78%" stop-color="#6e7e90"/>
-      <stop offset="100%" stop-color="#d2dce6"/>
+      <stop offset="0%" stop-color="${t.steelStops[0]}"/>
+      <stop offset="26%" stop-color="${t.steelStops[1]}"/>
+      <stop offset="52%" stop-color="${t.steelStops[2]}"/>
+      <stop offset="78%" stop-color="${t.steelStops[3]}"/>
+      <stop offset="100%" stop-color="${t.steelStops[4]}"/>
     </linearGradient>
     <radialGradient id="${idPrefix}-ring" cx="50%" cy="50%" r="50%">
-      <stop offset="70%" stop-color="#364d6d"/>
-      <stop offset="100%" stop-color="#24354c"/>
+      <stop offset="70%" stop-color="${t.bezelOuterColor}"/>
+      <stop offset="100%" stop-color="${t.bezelInnerColor}"/>
     </radialGradient>
-    <radialGradient id="${idPrefix}-face" cx="45%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="62%" stop-color="#e8f1fa"/>
-      <stop offset="100%" stop-color="#d4e4f3"/>
+    <radialGradient id="${idPrefix}-face" cx="45%" cy="40%" r="61%">
+      <stop offset="0%" stop-color="${t.centerFaceStops[0]}"/>
+      <stop offset="62%" stop-color="${t.centerFaceStops[1]}"/>
+      <stop offset="100%" stop-color="${t.centerFaceStops[2]}"/>
     </radialGradient>
     <linearGradient id="${idPrefix}-glass" x1="12%" y1="5%" x2="72%" y2="85%">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.28)"/>
-      <stop offset="55%" stop-color="rgba(255,255,255,0.08)"/>
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="55%" stop-color="rgba(255,255,255,0.06)"/>
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </linearGradient>
+    ${arcDefs}
   </defs>`;
 
-  /* outer brushed steel case + 72 coin-edge knurled notches */
-  h+=`<circle r="${RC}" fill="url(#${idPrefix}-steel)" stroke="#627284" stroke-width="1.5"/>`;
-  h+=`<circle r="250" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>`;
+  /* 1. outer brushed steel case + 72 coin-edge knurled notches */
+  h+=`<circle r="${RC}" fill="url(#${idPrefix}-steel)" stroke="${t.steelStops[3]}" stroke-width="1.5"/>`;
+  h+=`<circle r="253" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>`;
   for(let i=0;i<72;i++){
     const a=i*5;
-    const n1=bzPt(a,247),n2=bzPt(a,253);
+    const n1=bzPt(a,251),n2=bzPt(a,256);
     h+=`<line x1="${n1.x.toFixed(2)}" y1="${n1.y.toFixed(2)}" x2="${n2.x.toFixed(2)}" y2="${n2.y.toFixed(2)}" stroke="${i%2?'rgba(255,255,255,.38)':'rgba(25,40,60,.28)'}" stroke-width="1.1"/>`;
   }
 
-  /* city ring bezel */
+  /* 2. IWC-style staggered 2-track curved city bezel (DST highlighted by city color only) */
   h+=`<g id="${bezelId}">`;
-  h+=`<circle r="${RBO}" fill="url(#${idPrefix}-ring)" stroke="#5c789a" stroke-width="1.4"/>`;
-  h+=`<circle r="${RBI}" fill="#1b2a3d" stroke="url(#${idPrefix}-steel)" stroke-width="1.6"/>`;
+  h+=`<circle r="${RBO}" fill="url(#${idPrefix}-ring)" stroke="${t.bezelBorderColor}" stroke-width="1.4"/>`;
+  h+=`<circle r="${((R_OUT+R_IN)/2).toFixed(1)}" fill="none" stroke="${t.bezelTrackGuideColor}" stroke-width="0.7"/>`;
+  h+=`<circle r="${RBI}" fill="${t.bezelInnerDiskColor}" stroke="url(#${idPrefix}-steel)" stroke-width="1.6"/>`;
 
-  slots.forEach(c=>{
-    const ang=c.offset*15;
-    const p=bzPt(ang,RCL);
-    const t1=bzPt(ang,RBI+1),t2=bzPt(ang,RBI+7);
-    const sel=c.sel;
+  arcMeta.forEach(({c,idx,rawAng,isOuterTrack,oppositeR})=>{
     const isSeoul=c.name==='Seoul';
-    const fc=isSeoul?'#ff6b6b':(sel?'#ffd452':'#e8f2fc');
-    const tc=isSeoul?'#ff6b6b':(sel?'#ffd452':'#9cb9d6');
-    const sw=(isSeoul||sel)?2:1.2;
-    const fs=c.name.length>13?8.5:(c.name.length>10?9.5:((isSeoul||sel)?10.5:10));
+    const isHi=isSeoul||c.sel;
+    const accent=isSeoul?t.seoulColor:(c.dst?t.dstColor:(c.sel?t.londonColor:null));
+    const tickColor=accent||t.defaultCityTickColor;
+    const textColor=accent||t.defaultCityTextColor;
+    const dotColor=accent||t.defaultCityDotColor;
+    const tickW=isHi?2.6:(c.dst?2.1:1.3);
+    const t1=bzPt(rawAng,RBI+1),t2=bzPt(rawAng,RBI+6.5);
+    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${tickColor}" stroke-width="${tickW}"/>`;
 
-    h+=`<line x1="${t1.x.toFixed(2)}" y1="${t1.y.toFixed(2)}" x2="${t2.x.toFixed(2)}" y2="${t2.y.toFixed(2)}" stroke="${tc}" stroke-width="${sw}"/>`;
-    if(c.dst){
-      h+=`<text class="${cityCls}" data-offset="${c.offset}"
-        x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
-        text-anchor="middle" dominant-baseline="middle"
-        font-size="${fs}" font-weight="${(isSeoul||sel)?'700':'600'}"
-        font-family="Arial,sans-serif" fill="${fc}"
-        transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})"><title>${c.name} · 서머타임(DST) 적용 중</title><tspan x="${p.x.toFixed(2)}" dy="-5.8">${c.name}</tspan><tspan x="${p.x.toFixed(2)}" dy="13" font-size="9" font-weight="700" fill="#ffad42" letter-spacing="0.6">DST</tspan></text>`;
-    }else{
-      h+=`<text class="${cityCls}" data-offset="${c.offset}"
-        x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"
-        text-anchor="middle" dominant-baseline="middle"
-        font-size="${fs}" font-weight="${(isSeoul||sel)?'700':'600'}"
-        font-family="Arial,sans-serif" fill="${fc}"
-        transform="rotate(0,${p.x.toFixed(2)},${p.y.toFixed(2)})">${c.name}</text>`;
-    }
+    const upperName=c.name.toUpperCase();
+    let textSize=(isHi||c.dst)?22:20;
+    const maxArcW=isOuterTrack?94:78;
+    const measuredW=bzMeasureText(upperName,textSize,BZ_FONT_COND,0.04);
+    if(measuredW>maxArcW)textSize*=maxArcW/measuredW;
+    const titleTxt=c.dst?`${c.name} · 서머타임(DST) 적용 중`:c.name;
+
+    h+=`<text class="${cityCls}" data-offset="${c.offset}"
+      font-size="${textSize.toFixed(2)}" font-weight="700"
+      font-family="${BZ_FONT_COND}" fill="${textColor}"
+      letter-spacing="0.04em" text-anchor="middle" dominant-baseline="central"><title>${titleTxt}</title><textPath href="#${idPrefix}-arc-${idx}" startOffset="50%">${upperName}</textPath></text>`;
+
+    const dp=bzPt(rawAng,oppositeR);
+    const dotR=isHi?3.4:(c.dst?3.0:2.6);
+    h+=`<circle cx="${dp.x.toFixed(2)}" cy="${dp.y.toFixed(2)}" r="${dotR}" fill="${dotColor}"/>`;
   });
   h+=`</g>`;
 
-  /* two-tone day/night 24h dial (06-18 day, 18-06 night) */
+  /* 3. two-tone day/night 24h dial (06-18 day, 18-06 night) */
   const pDay=bzPt(90,RFC),pNit=bzPt(270,RFC);
   if(dialId)h+=`<g id="${dialId}">`;
-  h+=`<path d="M 0,0 L ${pDay.x.toFixed(2)},${pDay.y.toFixed(2)} A ${RFC},${RFC} 0 0,1 ${pNit.x.toFixed(2)},${pNit.y.toFixed(2)} Z" fill="#eef6fd"/>`;
-  h+=`<path d="M 0,0 L ${pNit.x.toFixed(2)},${pNit.y.toFixed(2)} A ${RFC},${RFC} 0 0,1 ${pDay.x.toFixed(2)},${pDay.y.toFixed(2)} Z" fill="#4c6b92"/>`;
+  h+=`<path d="M 0,0 L ${pDay.x.toFixed(2)},${pDay.y.toFixed(2)} A ${RFC},${RFC} 0 0,1 ${pNit.x.toFixed(2)},${pNit.y.toFixed(2)} Z" fill="${t.dayHalfColor}"/>`;
+  h+=`<path d="M 0,0 L ${pNit.x.toFixed(2)},${pNit.y.toFixed(2)} A ${RFC},${RFC} 0 0,1 ${pDay.x.toFixed(2)},${pDay.y.toFixed(2)} Z" fill="${t.nightHalfColor}"/>`;
   h+=`<circle r="${RFC}" fill="none" stroke="url(#${idPrefix}-steel)" stroke-width="2"/>`;
 
   for(let hr=0;hr<24;hr++){
@@ -1354,39 +2017,39 @@ function bzWatchMarkup(idPrefix,bezelId,cityCls,dialId,tickCls,lblId){
     const isHorizon=hr===6||hr===18;
     const isDay=hr>6&&hr<18;
     const maj=hr%6===0,mid=hr===0||hr===12;
-    const tO=bzPt(ang,RSO),tI=bzPt(ang,maj?158:161);
-    const sc=isHorizon?'#24507a':isDay?(mid?'#133454':maj?'#24507a':'#7da8cc'):(mid?'#ffffff':maj?'#e6f2ff':'rgba(225,240,255,.55)');
-    const tsw=mid?2.2:maj?1.7:1;
+    const tO=bzPt(ang,RSO),tI=bzPt(ang,maj?154:157);
+    const sc=isHorizon?t.dayMajorNumColor:isDay?((mid||maj)?t.dayMajorNumColor:t.dayMinorTickColor):((mid||maj)?t.nightMajorNumColor:t.nightMinorTickColor);
+    const tsw=mid?2.4:maj?1.8:1.1;
     h+=`<line x1="${tO.x.toFixed(2)}" y1="${tO.y.toFixed(2)}" x2="${tI.x.toFixed(2)}" y2="${tI.y.toFixed(2)}" stroke="${sc}" stroke-width="${tsw}"/>`;
     const np=bzPt(ang,RNM);
-    const numFill=isHorizon||isDay?'#133454':'#f4f8ff';
-    const numHalo=isHorizon?' stroke="#eef6fd" stroke-width="2.6" paint-order="stroke" stroke-linejoin="round"':'';
+    const numFill=(isHorizon||isDay)?t.dayMajorNumColor:t.nightMajorNumColor;
+    const numHalo=isHorizon?` stroke="${t.dayHalfColor}" stroke-width="3.2" paint-order="stroke" stroke-linejoin="round"`:'';
     h+=`<text${tickCls?` class="${tickCls}"`:''} x="${np.x.toFixed(2)}" y="${np.y.toFixed(2)}"
       text-anchor="middle" dominant-baseline="middle"
-      font-size="${maj?14.5:11.5}" font-weight="${maj?'800':'600'}"
-      font-family="Arial,sans-serif"
+      font-size="${maj?23:20}" font-weight="700"
+      font-family="${BZ_FONT_COND}"
       fill="${numFill}"${numHalo}>${String(hr).padStart(2,'0')}</text>`;
   }
   if(dialId)h+=`</g>`;
 
-  /* inner stepped chapter ring + sunburst center dial + 12 baton markers */
-  h+=`<circle r="124" fill="none" stroke="url(#${idPrefix}-steel)" stroke-width="3.5"/>`;
-  h+=`<circle r="122" fill="none" stroke="rgba(19,32,48,.18)" stroke-width="1"/>`;
-  h+=`<circle r="120" fill="url(#${idPrefix}-face)"/>`;
-  h+=`<circle r="113" fill="none" stroke="rgba(21,53,82,.09)" stroke-width="0.7"/>`;
-  h+=`<circle r="102" fill="none" stroke="rgba(21,53,82,.06)" stroke-width="0.7"/>`;
+  /* 4. inner stepped chapter ring + sunburst center dial + 12 baton markers */
+  h+=`<circle r="112" fill="none" stroke="url(#${idPrefix}-steel)" stroke-width="3.2"/>`;
+  h+=`<circle r="110" fill="none" stroke="rgba(19,32,48,.18)" stroke-width="1"/>`;
+  h+=`<circle r="108" fill="url(#${idPrefix}-face)"/>`;
+  h+=`<circle r="101" fill="none" stroke="${t.centerTimeColor}" stroke-opacity="0.09" stroke-width="0.7"/>`;
+  h+=`<circle r="91" fill="none" stroke="${t.centerTimeColor}" stroke-opacity="0.06" stroke-width="0.7"/>`;
 
   for(let h12=0;h12<12;h12++){
     const a=h12*30;
-    const b1=bzPt(a,108),b2=bzPt(a,117);
-    h+=`<line x1="${b1.x.toFixed(2)}" y1="${b1.y.toFixed(2)}" x2="${b2.x.toFixed(2)}" y2="${b2.y.toFixed(2)}" stroke="${h12%3===0?'#3a5470':'#7d96b0'}" stroke-width="${h12%3===0?'2.4':'1.4'}" stroke-linecap="round"/>`;
+    const b1=bzPt(a,97),b2=bzPt(a,105);
+    h+=`<line x1="${b1.x.toFixed(2)}" y1="${b1.y.toFixed(2)}" x2="${b2.x.toFixed(2)}" y2="${b2.y.toFixed(2)}" stroke="${h12%3===0?t.batonCardinalColor:t.batonMinorColor}" stroke-width="${h12%3===0?'2.2':'1.3'}" stroke-linecap="round"/>`;
   }
 
-  /* center time readout + subtle sapphire glass sheen */
-  h+=`<text x="0" y="-22" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="#c93b3b" font-family="Arial,sans-serif" letter-spacing="2">SEOUL</text>`;
-  h+=`<text id="${lblId}" x="0" y="4" text-anchor="middle" dominant-baseline="middle" font-size="24" font-weight="700" fill="#153552" font-family="Arial,sans-serif" letter-spacing="1.4" style="font-variant-numeric:tabular-nums">00:00:00</text>`;
-  h+=`<text x="0" y="28" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6a8eae" font-family="Arial,sans-serif" letter-spacing="1">UTC+9</text>`;
-  h+=`<path d="M -100,-63 A 119,119 0 0,1 74,-93 C 28,-49 -39,-30 -100,-63 Z" fill="url(#${idPrefix}-glass)" opacity="0.45" pointer-events="none"/>`;
+  /* 5. center Seoul digital readout + subtle sapphire glass sheen */
+  h+=`<text x="0" y="-36" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="${t.centerCityColor}" font-family="${BZ_FONT_SANS}" letter-spacing="2.5">SEOUL</text>`;
+  h+=`<text id="${lblId}" x="0" y="2" text-anchor="middle" dominant-baseline="middle" font-size="38" font-weight="700" fill="${t.centerTimeColor}" font-family="${BZ_FONT_COND}" letter-spacing="1.2" style="font-variant-numeric:tabular-nums">00:00:00</text>`;
+  h+=`<text x="0" y="38" text-anchor="middle" dominant-baseline="middle" font-size="15.5" font-weight="700" fill="${t.centerUtcColor}" font-family="${BZ_FONT_SANS}" letter-spacing="1.2">UTC+9</text>`;
+  h+=`<path d="M -90,-56 C -57,-106 20,-112 66,-83 C 25,-44 -35,-27 -90,-56 Z" fill="url(#${idPrefix}-glass)" pointer-events="none"/>`;
 
   return h;
 }
@@ -1430,12 +2093,6 @@ function bzApplyDeg(deg,force=false){
   if(!force&&Math.min(diff,360-diff)<0.1)return;
   const bezel=document.getElementById('bzBezel');if(!bezel)return;
   bezel.setAttribute('transform',`rotate(${bzDeg.toFixed(3)})`);
-  /* counter-rotate labels so text stays horizontal */
-  document.querySelectorAll('.bzcl').forEach(lbl=>{
-    const cx=parseFloat(lbl.getAttribute('x'));
-    const cy=parseFloat(lbl.getAttribute('y'));
-    lbl.setAttribute('transform',`rotate(${(-bzDeg).toFixed(3)},${cx},${cy})`);
-  });
   bzRenderedDeg=bzDeg;
 }
 
@@ -1632,7 +2289,7 @@ function drawWallMap(){
   ctx.clearRect(0,0,W,H);
 
   const path=d3.geoPath().projection(wallProj).context(ctx);
-  ctx.fillStyle='#cfd6de';
+  ctx.fillStyle=activeTheme.isDark?'#2d3b4a':'#cfd6de';
   ctx.beginPath();
   path(land);
   ctx.fill();
@@ -1809,6 +2466,7 @@ function updateWallClocks(){
    INIT
 ══════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',()=>{
+  loadThemeFromStorage();
   loadCitiesFromStorage();
   initRefTs();
   renderList();
@@ -1824,8 +2482,12 @@ window.addEventListener('resize',()=>{
   if(mapTopo) drawWallMap();
 });
 
-// sync city changes across tabs
+// sync city & theme changes across tabs
 window.addEventListener('storage',e=>{
+  if(e.key===THEME_STORAGE_KEY){
+    applyTheme(e.newValue,false);
+    return;
+  }
   if(e.key!==STORAGE_KEY)return;
   loadCitiesFromStorage();
   renderList();
